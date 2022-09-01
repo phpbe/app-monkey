@@ -1,0 +1,25 @@
+{
+  "name": "be/app-monkey",
+  "type": "library",
+  "description": "猴子采集器",
+  "keywords": [
+    "Monkey",
+    "猴子采集器"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "liu12",
+      "email": "i@liu12.com",
+      "homepage": "http://www.liu12.com/"
+    }
+  ],
+  "require": {
+    "be/be": "~2.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Be\\App\\Monkey\\": "src/"
+    }
+  }
+}

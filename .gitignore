@@ -1,0 +1,8 @@
+server.php
+composer.lock
+.DS_store
+Thumbs.db
+
+/data
+/www
+/vendor
