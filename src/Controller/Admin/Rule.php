@@ -9,6 +9,8 @@ use Be\AdminPlugin\Table\Item\TableItemLink;
 use Be\AdminPlugin\Form\Item\FormItemSelect;
 use Be\AdminPlugin\Table\Item\TableItemSelection;
 use Be\AdminPlugin\Table\Item\TableItemSwitch;
+use Be\AdminPlugin\Toolbar\Item\ToolbarItemDropDown;
+use Be\AdminPlugin\Toolbar\Item\ToolbarItemLink;
 use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
 
@@ -20,20 +22,20 @@ class Rule extends Auth
 {
 
     /**
-     * 规则
+     * 采集器
      *
-     * @BeMenu("规则", icon="el-icon-connection", ordering="1.1")
-     * @BePermission("规则", ordering="1.1")
+     * @BeMenu("采集器", icon="el-icon-connection", ordering="1.1")
+     * @BePermission("采集器", ordering="1.1")
      */
     public function rules()
     {
         Be::getAdminPlugin('Curd')->setting([
 
-            'label' => '规则',
+            'label' => '采集器',
             'table' => 'monkey_rule',
 
             'grid' => [
-                'title' => '规则',
+                'title' => '采集器',
 
                 'filter' => [
                     ['is_delete', '=', '0'],
@@ -60,10 +62,25 @@ class Rule extends Auth
                     ],
                 ],
 
+                'titleToolbar' => [
+                    'items' => [
+                        [
+                            'label' => '采集器商城',
+                            'driver' => ToolbarItemLink::class,
+                            'action' => 'storeRules',
+                            'target' => 'self', // 'ajax - ajax请求 / dialog - 对话框窗口 / drawer - 抽屉 / self - 当前页面 / blank - 新页面'
+                            'ui' => [
+                                'icon' => 'el-icon-plus',
+                                'type' => 'primary',
+                            ]
+                        ],
+                    ]
+                ],
+
                 'titleRightToolbar' => [
                     'items' => [
                         [
-                            'label' => '新建规则',
+                            'label' => '新建采集器',
                             'action' => 'create',
                             'target' => 'self', // 'ajax - ajax请求 / dialog - 对话框窗口 / drawer - 抽屉 / self - 当前页面 / blank - 新页面'
                             'ui' => [
@@ -163,9 +180,9 @@ class Rule extends Auth
                         ],
                         [
                             'name' => 'task_count',
-                            'label' => '任务数',
+                            'label' => '采集任务数',
                             'align' => 'center',
-                            'width' => '80',
+                            'width' => '90',
                             'driver' => TableItemLink::class,
                             'value' => function ($row) {
                                 $sql = 'SELECT COUNT(*) FROM monkey_task WHERE rule_id = ?';
@@ -204,7 +221,7 @@ class Rule extends Auth
                         'items' => [
                             [
                                 'label' => '',
-                                'tooltip' => '创建任务',
+                                'tooltip' => '创建采集任务',
                                 'action' => 'createTask',
                                 'target' => 'self',
                                 'ui' => [
@@ -247,7 +264,7 @@ class Rule extends Auth
             ],
 
             'detail' => [
-                'title' => '规则规则详情',
+                'title' => '采集器采集器详情',
                 'theme' => 'Blank',
                 'form' => [
                     'items' => [
@@ -325,7 +342,178 @@ class Rule extends Auth
     }
 
     /**
-     * 新建规则
+     * 采集器
+     *
+     * @BePermission("采集器商城", ordering="1.2")
+     */
+    public function storeRules()
+    {
+        Be::getAdminPlugin('Curd')->setting([
+
+            'label' => '采集器商城',
+            'table' => 'monkey_rule',
+
+            'grid' => [
+                'title' => '采集器商城',
+
+                'orderBy' => 'ordering',
+                'orderByDir' => 'DESC',
+
+                'form' => [
+                    'items' => [
+                        [
+                            'name' => 'name',
+                            'label' => '名称',
+                        ],
+                    ],
+                ],
+
+                'table' => [
+
+                    // 未指定时取表的所有字段
+                    'items' => [
+                        [
+                            'driver' => TableItemSelection::class,
+                            'width' => '50',
+                        ],
+                        [
+                            'name' => 'name',
+                            'label' => '名称',
+                            'driver' => TableItemLink::class,
+                            'align' => 'left',
+                            'task' => 'detail',
+                            'drawer' => [
+                                'width' => '80%'
+                            ],
+                        ],
+                        [
+                            'name' => 'start_page',
+                            'label' => '起始网址',
+                            'driver' => TableItemLink::class,
+                            'align' => 'left',
+                            'target' => 'blank',
+                            'ui' => [
+                                'rel' => 'noreferrer',
+                            ],
+                        ],
+                        [
+                            'name' => 'filed_count',
+                            'label' => '字段数',
+                            'align' => 'center',
+                            'width' => '80',
+                            'value' => function ($row) {
+                                $sql = 'SELECT COUNT(*) FROM monkey_rule_field WHERE rule_id = ?';
+                                $count = Be::getDb()->getValue($sql, [$row['id']]);
+                                return $count;
+                            },
+                        ],
+                        [
+                            'name' => 'version',
+                            'label' => '版本号',
+                            'width' => '80',
+                        ],
+                    ],
+                    'operation' => [
+                        'label' => '操作',
+                        'width' => '120',
+                        'items' => [
+                            [
+                                'label' => '',
+                                'tooltip' => '拉取到本地',
+                                'action' => 'pull',
+                                'target' => 'self',
+                                'ui' => [
+                                    'type' => 'success',
+                                    ':underline' => 'false',
+                                    'style' => 'font-size: 20px;',
+                                ],
+                                'icon' => 'el-icon-download',
+                            ],
+                        ]
+                    ],
+                ],
+            ],
+
+            'detail' => [
+                'title' => '采集器采集器详情',
+                'theme' => 'Blank',
+                'form' => [
+                    'items' => [
+                        [
+                            'name' => 'id',
+                            'label' => 'ID',
+                        ],
+                        [
+                            'name' => 'name',
+                            'label' => '名称',
+                        ],
+                        [
+                            'name' => 'description',
+                            'label' => '描述',
+                            'driver' => DetailItemHtml::class,
+                        ],
+                        [
+                            'name' => 'version',
+                            'label' => '版本号',
+                        ],
+                        [
+                            'name' => 'match_1',
+                            'label' => '匹配网址1',
+                        ],
+                        [
+                            'name' => 'match_2',
+                            'label' => '匹配网址2',
+                        ],
+                        [
+                            'name' => 'match_3',
+                            'label' => '匹配网址3',
+                        ],
+                        [
+                            'name' => 'start_page',
+                            'label' => '起始页',
+                        ],
+                        [
+                            'name' => 'get_next_page_script',
+                            'label' => '获取下一页脚本',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'javascript',
+                        ],
+                        [
+                            'name' => 'get_links_script',
+                            'label' => '获取页面链接脚本',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'javascript',
+                        ],
+                        [
+                            'name' => 'interval',
+                            'label' => '间隔时间（毫秒）',
+                        ],
+                        [
+                            'name' => 'ordering',
+                            'label' => '排序',
+                        ],
+                        [
+                            'name' => 'is_enable',
+                            'label' => '启用/禁用',
+                            'driver' => DetailItemToggleIcon::class,
+                        ],
+                        [
+                            'name' => 'create_time',
+                            'label' => '创建时间',
+                        ],
+                        [
+                            'name' => 'update_time',
+                            'label' => '更新时间',
+                        ],
+                    ]
+                ],
+            ],
+
+        ])->execute();
+    }
+
+    /**
+     * 新建采集器
      *
      * @BePermission("新建", ordering="1.21")
      */
@@ -338,7 +526,7 @@ class Rule extends Auth
             try {
                 Be::getService('App.Monkey.Admin.Rule')->edit($request->json('formData'));
                 $response->set('success', true);
-                $response->set('message', '新建规则成功！');
+                $response->set('message', '新建采集器成功！');
                 $response->json();
             } catch (\Throwable $t) {
                 $response->set('success', false);
@@ -348,7 +536,7 @@ class Rule extends Auth
         } else {
             $response->set('rule', false);
 
-            $response->set('title', '新建规则');
+            $response->set('title', '新建采集器');
 
             //$response->display();
             $response->display('App.Monkey.Admin.Rule.edit');
@@ -369,7 +557,7 @@ class Rule extends Auth
             try {
                 Be::getService('App.Monkey.Admin.Rule')->edit($request->json('formData'));
                 $response->set('success', true);
-                $response->set('message', '编辑规则成功！');
+                $response->set('message', '编辑采集器成功！');
                 $response->json();
             } catch (\Throwable $t) {
                 $response->set('success', false);
@@ -389,14 +577,14 @@ class Rule extends Auth
             $rule = Be::getService('App.Monkey.Admin.Rule')->getRule($ruleId);
             $response->set('rule', $rule);
 
-            $response->set('title', '编辑规则');
+            $response->set('title', '编辑采集器');
 
             $response->display();
         }
     }
 
     /**
-     * 查看任务
+     * 查看采集任务
      *
      * @BePermission("*")
      */
@@ -415,7 +603,7 @@ class Rule extends Auth
     }
 
     /**
-     * 创建任务
+     * 创建采集任务
      *
      * @BePermission("*")
      */

@@ -22,20 +22,23 @@ class Task extends Auth
 {
 
     /**
-     * 采集规则
+     * 采集采集器
      *
-     * @BeMenu("任务", icon="el-icon-video-play", ordering="1.2")
-     * @BePermission("任务", ordering="1.2")
+     * @BeMenu("采集任务", icon="el-icon-video-play", ordering="1.2")
+     * @BePermission("采集任务", ordering="1.2")
      */
     public function tasks()
     {
+
+        $ruleKeyValues = Be::getService('App.Monkey.Admin.Rule')->getRuleKeyValues();
+
         Be::getAdminPlugin('Curd')->setting([
 
-            'label' => '任务',
+            'label' => '采集任务',
             'table' => 'monkey_task',
 
             'grid' => [
-                'title' => '任务',
+                'title' => '采集任务',
 
                 'filter' => [
                     ['is_delete', '=', '0'],
@@ -46,7 +49,6 @@ class Task extends Auth
 
                 'form' => [
                     'items' => [
-
                         [
                             'name' => 'is_enable',
                             'label' => '启用状态',
@@ -55,6 +57,12 @@ class Task extends Auth
                                 '1' => '启用',
                                 '0' => '禁用',
                             ],
+                        ],
+                        [
+                            'name' => 'rule_id',
+                            'label' => '采集器',
+                            'driver' => FormItemSelect::class,
+                            'keyValues' => $ruleKeyValues,
                         ],
                     ],
                 ],
@@ -131,7 +139,7 @@ class Task extends Auth
                         ],
                         [
                             'name' => 'name',
-                            'label' => '任务名称',
+                            'label' => '采集任务名称',
                             'driver' => TableItemLink::class,
                             'align' => 'left',
                             'task' => 'detail',
@@ -141,7 +149,7 @@ class Task extends Auth
                         ],
                         [
                             'name' => 'rule_name',
-                            'label' => '规则名称',
+                            'label' => '采集器名称',
                             'align' => 'left',
                             'value' => function ($row) {
                                 $sql = 'SELECT `name` FROM monkey_rule WHERE id = ?';
@@ -152,6 +160,20 @@ class Task extends Auth
                                     return '-';
                                 }
                             },
+                        ],
+                        [
+                            'name' => 'content_count',
+                            'label' => '采集的内容',
+                            'align' => 'center',
+                            'width' => '120',
+                            'driver' => TableItemLink::class,
+                            'value' => function ($row) {
+                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE task_id = ?';
+                                $count = Be::getDb()->getValue($sql, [$row['id']]);
+                                return $count;
+                            },
+                            'action' => 'showContents',
+                            'target' => 'self',
                         ],
                         [
                             'name' => 'version',
@@ -240,7 +262,7 @@ class Task extends Auth
             ],
 
             'detail' => [
-                'title' => '任务任务详情',
+                'title' => '采集任务详情',
                 'theme' => 'Blank',
                 'form' => [
                     'items' => [
@@ -322,7 +344,7 @@ class Task extends Auth
     }
 
     /**
-     * 新建任务
+     * 新建采集任务
      *
      * @BePermission("新建", ordering="1.21")
      */
@@ -337,7 +359,7 @@ class Task extends Auth
             try {
                 Be::getService('App.Monkey.Admin.Task')->edit($request->json('formData'));
                 $response->set('success', true);
-                $response->set('message', '新建任务成功！');
+                $response->set('message', '新建采集任务成功！');
                 $response->json();
             } catch (\Throwable $t) {
                 $response->set('success', false);
@@ -349,7 +371,7 @@ class Task extends Auth
                 $rules = Be::getService('App.Monkey.Admin.Rule')->getRules();
                 $response->set('rules', $rules);
 
-                $response->set('title', '新建任务');
+                $response->set('title', '新建采集任务');
                 $response->display('App.Monkey.Admin.Task.selectRule');
             } else {
                 $rule = Be::getService('App.Monkey.Admin.Rule')->getRule($ruleId);
@@ -357,7 +379,7 @@ class Task extends Auth
 
                 $response->set('task', false);
 
-                $response->set('title', '新建任务');
+                $response->set('title', '新建采集任务');
                 $response->display('App.Monkey.Admin.Task.edit');
             }
         }
@@ -377,7 +399,7 @@ class Task extends Auth
             try {
                 Be::getService('App.Monkey.Admin.Task')->edit($request->json('formData'));
                 $response->set('success', true);
-                $response->set('message', '编辑任务成功！');
+                $response->set('message', '编辑采集任务成功！');
                 $response->json();
             } catch (\Throwable $t) {
                 $response->set('success', false);
@@ -400,7 +422,7 @@ class Task extends Auth
             $rule = Be::getService('App.Monkey.Admin.Rule')->getRule($task->rule_id);
             $response->set('rule', $rule);
 
-            $response->set('title', '编辑任务');
+            $response->set('title', '编辑采集任务');
 
             $response->display();
         }
@@ -453,4 +475,22 @@ class Task extends Auth
         }
     }
 
+    /**
+     * 查看采集的内容
+     *
+     * @BePermission("*")
+     */
+    public function showContents()
+    {
+        $request = Be::getRequest();
+        $response = Be::getResponse();
+
+        $postData = $request->post('data', '', '');
+        if ($postData) {
+            $postData = json_decode($postData, true);
+            if (isset($postData['row']['id']) && $postData['row']['id']) {
+                $response->redirect(beAdminUrl('Monkey.Content.contents', ['task_id' => $postData['row']['id']]));
+            }
+        }
+    }
 }

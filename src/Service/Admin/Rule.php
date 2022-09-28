@@ -206,6 +206,7 @@ class Rule
             $tupleRule->interval = $data['interval'];
             $tupleRule->version = $data['version'];
             $tupleRule->ordering = $data['ordering'];
+            $tupleRule->fields = serialize($data['fields']);
             $tupleRule->is_enable = $data['is_enable'];
             $tupleRule->update_time = $now;
             if ($isNew) {

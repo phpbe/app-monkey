@@ -17,24 +17,24 @@ use Be\Be;
  * @BeMenuGroup("发布", icon="el-icon-upload", ordering="3")
  * @BePermissionGroup("发布")
  */
-class Post extends Auth
+class PushDriver extends Auth
 {
 
     /**
-     * 内容列表
+     * 发布器
      *
-     * @BeMenu("内容列表", icon="el-icon-upload", ordering="1.2")
-     * @BePermission("内容列表", ordering="1.2")
+     * @BeMenu("发布器", icon="el-icon-upload", ordering="1.2")
+     * @BePermission("发布器", ordering="1.2")
      */
-    public function contents()
+    public function drivers()
     {
         Be::getAdminPlugin('Curd')->setting([
 
-            'label' => '任务',
-            'table' => 'monkey_task',
+            'label' => '发布器',
+            'table' => 'monkey_push_driver',
 
             'grid' => [
-                'title' => '任务',
+                'title' => '发布器',
 
                 'filter' => [
                     ['is_delete', '=', '0'],
@@ -61,7 +61,7 @@ class Post extends Auth
                 'titleRightToolbar' => [
                     'items' => [
                         [
-                            'label' => '新建采集任务',
+                            'label' => '新建发布器',
                             'action' => 'create',
                             'target' => 'self', // 'ajax - ajax请求 / dialog - 对话框窗口 / drawer - 抽屉 / self - 当前页面 / blank - 新页面'
                             'ui' => [
@@ -130,32 +130,13 @@ class Post extends Auth
                         ],
                         [
                             'name' => 'name',
-                            'label' => '任务名称',
+                            'label' => '名称',
                             'driver' => TableItemLink::class,
                             'align' => 'left',
                             'task' => 'detail',
                             'drawer' => [
                                 'width' => '80%'
                             ],
-                        ],
-                        [
-                            'name' => 'rule_name',
-                            'label' => '规则名称',
-                            'align' => 'left',
-                            'value' => function ($row) {
-                                $sql = 'SELECT `name` FROM monkey_rule WHERE id = ?';
-                                $ruleName = Be::getDb()->getValue($sql, [$row['rule_id']]);
-                                if ($ruleName) {
-                                    return $ruleName;
-                                } else {
-                                    return '-';
-                                }
-                            },
-                        ],
-                        [
-                            'name' => 'version',
-                            'label' => '子版本',
-                            'width' => '80',
                         ],
                         [
                             'name' => 'ordering',
@@ -238,7 +219,7 @@ class Post extends Auth
             ],
 
             'detail' => [
-                'title' => '任务任务详情',
+                'title' => '采集任务采集任务详情',
                 'theme' => 'Blank',
                 'form' => [
                     'items' => [

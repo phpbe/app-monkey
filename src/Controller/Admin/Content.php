@@ -2,20 +2,17 @@
 
 namespace Be\App\Monkey\Controller\Admin;
 
-use Be\AdminPlugin\Detail\Item\DetailItemCode;
-use Be\AdminPlugin\Detail\Item\DetailItemHtml;
-use Be\AdminPlugin\Detail\Item\DetailItemToggleIcon;
-use Be\AdminPlugin\Table\Item\TableItemImage;
+
+use Be\AdminPlugin\Table\Item\TableItemCustom;
 use Be\AdminPlugin\Table\Item\TableItemLink;
 use Be\AdminPlugin\Form\Item\FormItemSelect;
 use Be\AdminPlugin\Table\Item\TableItemSelection;
-use Be\AdminPlugin\Table\Item\TableItemSwitch;
 use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
 
 /**
- * @BeMenuGroup("采集的内容", icon="el-icon-document-copy", ordering="2")
- * @BePermissionGroup("采集的内容")
+ * @BeMenuGroup("内容", icon="el-icon-document-copy", ordering="2")
+ * @BePermissionGroup("内容")
  */
 class Content extends Auth
 {
@@ -28,6 +25,8 @@ class Content extends Auth
      */
     public function contents()
     {
+        $taskKeyValues = Be::getService('App.Monkey.Admin.Task')->getTaskKeyValues();
+
         Be::getAdminPlugin('Curd')->setting([
 
             'label' => '采集的内容',
@@ -49,6 +48,12 @@ class Content extends Auth
                                 '1' => '启用',
                                 '0' => '禁用',
                             ],
+                        ],
+                        [
+                            'name' => 'task_id',
+                            'label' => '采集器',
+                            'driver' => FormItemSelect::class,
+                            'keyValues' => $taskKeyValues,
                         ],
                     ],
                 ],
@@ -93,7 +98,7 @@ class Content extends Auth
                         ],
                         [
                             'name' => 'task_name',
-                            'label' => '任务名称',
+                            'label' => '采集任务名称',
                             'width' => '250',
                             'align' => 'left',
                             'value' => function ($row) {
@@ -109,7 +114,6 @@ class Content extends Auth
                         [
                             'name' => 'title',
                             'label' => '标题',
-                            'width' => '250',
                             'align' => 'left',
                             'driver' => TableItemLink::class,
                             'action' => 'detail',
@@ -120,13 +124,13 @@ class Content extends Auth
                         ],
                         [
                             'name' => 'url',
-                            'label' => '采集网址',
-                            'align' => 'left',
-                            'driver' => TableItemLink::class,
-                            'target' => 'blank',
-                            'ui' => [
-                                'rel' => 'noreferrer',
-                            ],
+                            'label' => '来源网址',
+                            'width' => '120',
+                            'align' => 'center',
+                            'driver' => TableItemCustom::class,
+                            'value' => function($row) {
+                                return '<a class="el-link el-link--primary is-underline" href="' .$row['url']. '" title="' .$row['url']. '" rel="noreferrer" target="_blank"><i class="el-icon-link"></i></a>';
+                            },
                         ],
                         [
                             'name' => 'update_time',
@@ -136,7 +140,7 @@ class Content extends Auth
                     ],
                     'operation' => [
                         'label' => '操作',
-                        'width' => '200',
+                        'width' => '80',
                         'items' => [
                             [
                                 'label' => '',
@@ -160,7 +164,7 @@ class Content extends Auth
 
 
     /**
-     * 查看任务
+     * 查看采集任务
      *
      * @BePermission("内容详情")
      */

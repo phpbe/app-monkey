@@ -227,6 +227,7 @@ class Task
             $tupleTask->get_next_page_script = $data['get_next_page_script'];
             $tupleTask->get_links_script = $data['get_links_script'];
             $tupleTask->interval = $data['interval'];
+            $tupleTask->fields = serialize($data['fields']);
 
             if ($isNew) {
                 $tupleTask->version = 1;
