@@ -28,7 +28,7 @@ BeMonkey = {
 
     running: 0,
 
-    step: 'init', // start-page / link
+    step: 'init',
 
     // 链接
     links: false,
@@ -378,7 +378,6 @@ BeMonkey = {
                 },
                 responseType: "json",
                 onload: function (response) {
-
                     if (response.status !== 200) {
                         _this.status("提交数据失败，60秒后再次尝试！");
                         console.log(response);

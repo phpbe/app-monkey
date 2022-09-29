@@ -14,31 +14,27 @@ use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
 
 /**
- * @BeMenuGroup("采集")
+ * @BeMenuGroup("采集", icon="bi-cloud-arrow-down", ordering="1")
  * @BePermissionGroup("采集")
  */
-class PullDriver extends Auth
+class PullDriverStore extends Auth
 {
 
     /**
-     * 采集器
+     * 采集器商店
      *
-     * @BeMenu("采集器", icon="bi-cloud-download", ordering="1.2")
-     * @BePermission("采集器", ordering="1.2")
+     * @BeMenu("采集器商店", icon="bi-cloud-download-fill", ordering="1.1")
+     * @BePermission("采集器商店", ordering="1.1")
      */
-    public function pullDrivers()
+    public function storeDrivers()
     {
         Be::getAdminPlugin('Curd')->setting([
 
-            'label' => '采集器',
+            'label' => '采集器商城',
             'table' => 'monkey_pull_driver',
 
             'grid' => [
-                'title' => '采集器',
-
-                'filter' => [
-                    ['is_delete', '=', '0'],
-                ],
+                'title' => '采集器商城',
 
                 'orderBy' => 'ordering',
                 'orderByDir' => 'DESC',
@@ -49,79 +45,8 @@ class PullDriver extends Auth
                             'name' => 'name',
                             'label' => '名称',
                         ],
-                        [
-                            'name' => 'is_enable',
-                            'label' => '启用状态',
-                            'driver' => FormItemSelect::class,
-                            'keyValues' => [
-                                '1' => '启用',
-                                '0' => '禁用',
-                            ],
-                        ],
                     ],
                 ],
-
-                'titleRightToolbar' => [
-                    'items' => [
-                        [
-                            'label' => '新建采集器',
-                            'action' => 'create',
-                            'target' => 'self', // 'ajax - ajax请求 / dialog - 对话框窗口 / drawer - 抽屉 / self - 当前页面 / blank - 新页面'
-                            'ui' => [
-                                'icon' => 'el-icon-plus',
-                                'type' => 'primary',
-                            ]
-                        ],
-                    ]
-                ],
-
-                'tableToolbar' => [
-                    'items' => [
-                        [
-                            'label' => '批量启用',
-                            'task' => 'fieldEdit',
-                            'postData' => [
-                                'field' => 'is_enable',
-                                'value' => '1',
-                            ],
-                            'target' => 'ajax',
-                            'confirm' => '确认要启用吗？',
-                            'ui' => [
-                                'icon' => 'el-icon-check',
-                                'type' => 'success',
-                            ]
-                        ],
-                        [
-                            'label' => '批量禁用',
-                            'task' => 'fieldEdit',
-                            'postData' => [
-                                'field' => 'is_enable',
-                                'value' => '0',
-                            ],
-                            'target' => 'ajax',
-                            'confirm' => '确认要禁用吗？',
-                            'ui' => [
-                                'icon' => 'el-icon-close',
-                                'type' => 'warning',
-                            ]
-                        ],
-                        [
-                            'label' => '批量删除',
-                            'task' => 'fieldEdit',
-                            'postData' => [
-                                'field' => 'is_delete',
-                                'value' => '1',
-                            ],
-                            'target' => 'ajax',
-                            'confirm' => '确认要删除吗？',
-                            'ui' => [
-                                'icon' => 'el-icon-delete',
-                                'type' => 'danger'
-                            ]
-                        ],
-                    ]
-                ],
-
 
                 'table' => [
 
@@ -152,50 +77,20 @@ class PullDriver extends Auth
                             ],
                         ],
                         [
-                            'name' => 'task_count',
-                            'label' => '采集任务数',
-                            'align' => 'center',
-                            'width' => '90',
-                            'driver' => TableItemLink::class,
-                            'value' => function ($row) {
-                                $sql = 'SELECT COUNT(*) FROM monkey_pull_task WHERE pull_driver_id = ?';
-                                $count = Be::getDb()->getValue($sql, [$row['id']]);
-                                return $count;
-                            },
-                            'action' => 'showPullTasks',
-                            'target' => 'self',
-                        ],
-                        [
                             'name' => 'filed_count',
                             'label' => '字段数',
                             'align' => 'center',
                             'width' => '80',
                             'value' => function ($row) {
-                                $fields = unserialize($row['fields']);
-                                return count($fields);
+                                $sql = 'SELECT COUNT(*) FROM monkey_pull_driver_field WHERE pull_driver_id = ?';
+                                $count = Be::getDb()->getValue($sql, [$row['id']]);
+                                return $count;
                             },
                         ],
                         [
                             'name' => 'version',
                             'label' => '版本号',
                             'width' => '80',
-                        ],
-                        [
-                            'name' => 'ordering',
-                            'label' => '排序',
-                            'width' => '80',
-                            'sortable' => true,
-                        ],
-                        [
-                            'name' => 'is_enable',
-                            'label' => '启用/禁用',
-                            'driver' => TableItemSwitch::class,
-                            'target' => 'ajax',
-                            'task' => 'fieldEdit',
-                            'width' => '90',
-                            'exportValue' => function ($row) {
-                                return $row['is_enable'] ? '启用' : '禁用';
-                            },
                         ],
                     ],
                     'operation' => [
@@ -204,42 +99,15 @@ class PullDriver extends Auth
                         'items' => [
                             [
                                 'label' => '',
-                                'tooltip' => '创建采集任务',
-                                'action' => 'createPullTask',
+                                'tooltip' => '拉取到本地',
+                                'action' => 'pull',
                                 'target' => 'self',
                                 'ui' => [
                                     'type' => 'success',
                                     ':underline' => 'false',
                                     'style' => 'font-size: 20px;',
                                 ],
-                                'icon' => 'el-icon-plus',
-                            ],[
-                                'label' => '',
-                                'tooltip' => '编辑',
-                                'action' => 'edit',
-                                'target' => 'self',
-                                'ui' => [
-                                    ':underline' => 'false',
-                                    'style' => 'font-size: 20px;',
-                                ],
-                                'icon' => 'el-icon-edit',
-                            ],
-                            [
-                                'label' => '',
-                                'tooltip' => '删除',
-                                'task' => 'fieldEdit',
-                                'postData' => [
-                                    'field' => 'is_delete',
-                                    'value' => '1',
-                                ],
-                                'confirm' => '确认要删除么？',
-                                'target' => 'ajax',
-                                'ui' => [
-                                    'type' => 'danger',
-                                    ':underline' => 'false',
-                                    'style' => 'font-size: 20px;',
-                                ],
-                                'icon' => 'el-icon-delete',
+                                'icon' => 'el-icon-download',
                             ],
                         ]
                     ],

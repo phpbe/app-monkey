@@ -39,7 +39,13 @@ class PullDriver
         $pullDriver->ordering = (int)$pullDriver->ordering;
         $pullDriver->is_enable = (int)$pullDriver->is_enable;
         $pullDriver->is_delete = (int)$pullDriver->is_delete;
-        $pullDriver->fields = unserialize($pullDriver->fields);
+
+        $fields = unserialize($pullDriver->fields);
+        foreach ($fields as &$field) {
+            $field['is_title'] = (int)$field['is_title'];
+        }
+        unset($field);
+        $pullDriver->fields = $fields;
 
         return $pullDriver;
     }
@@ -146,10 +152,13 @@ class PullDriver
             throw new ServiceException('采集字段缺失！');
         }
 
+
+        $fields = [];
+
         $isTitleFields = 0;
 
         $i = 0;
-        foreach ($data['fields'] as &$field) {
+        foreach ($data['fields'] as $field) {
             $i++;
             if (!isset($field['name']) || !is_string($field['name'])) {
                 throw new ServiceException('第' . $i . '个采集字段名称缺失！');
@@ -175,6 +184,8 @@ class PullDriver
                 $field['is_title'] = 0;
             }
 
+            $field['is_title'] = (int)$field['is_title'];
+
             if (!in_array($field['is_title'], [0, 1])) {
                 $field['is_title'] = 0;
             }
@@ -182,8 +193,14 @@ class PullDriver
             if ($field['is_title'] === 1) {
                 $isTitleFields++;
             }
+
+            $fields[] = [
+                'name' => $field['name'],
+                'script' => $field['script'],
+                'is_title' => $field['is_title'],
+            ];
         }
-        unset($field);
+        $data['fields'] = $fields;
 
         if ($isTitleFields !== 1) {
             throw new ServiceException('采集字段必须且仅设置一个标题字段！');

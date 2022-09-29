@@ -5,7 +5,6 @@ namespace Be\App\Monkey\Controller\Admin;
 use Be\AdminPlugin\Detail\Item\DetailItemCode;
 use Be\AdminPlugin\Detail\Item\DetailItemHtml;
 use Be\AdminPlugin\Detail\Item\DetailItemToggleIcon;
-use Be\AdminPlugin\Operation\Item\OperationItemLink;
 use Be\AdminPlugin\Table\Item\TableItemImage;
 use Be\AdminPlugin\Table\Item\TableItemLink;
 use Be\AdminPlugin\Form\Item\FormItemSelect;
@@ -15,30 +14,27 @@ use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
 
 /**
- * @BeMenuGroup("采集")
- * @BePermissionGroup("采集")
+ * @BeMenuGroup("发布", icon="bi-cloud-arrow-up", ordering="3")
+ * @BePermissionGroup("发布")
  */
-class PullTask extends Auth
+class PushDriverStore extends Auth
 {
 
     /**
-     * 采集器
+     * 发布器
      *
-     * @BeMenu("采集任务", icon="el-icon-video-play", ordering="1.2")
-     * @BePermission("采集任务", ordering="1.2")
+     * @BeMenu("发布器商店", icon="bi-cloud-upload-fill", ordering="3.1")
+     * @BePermission("发布器商店", ordering="3.1")
      */
-    public function pullTasks()
+    public function drivers()
     {
-
-        $pullDriverKeyValues = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriverKeyValues();
-
         Be::getAdminPlugin('Curd')->setting([
 
-            'label' => '采集任务',
-            'table' => 'monkey_pull_task',
+            'label' => '发布器',
+            'table' => 'monkey_push_driver',
 
             'grid' => [
-                'title' => '采集任务',
+                'title' => '发布器',
 
                 'filter' => [
                     ['is_delete', '=', '0'],
@@ -49,6 +45,7 @@ class PullTask extends Auth
 
                 'form' => [
                     'items' => [
+
                         [
                             'name' => 'is_enable',
                             'label' => '启用状态',
@@ -58,19 +55,13 @@ class PullTask extends Auth
                                 '0' => '禁用',
                             ],
                         ],
-                        [
-                            'name' => 'pull_driver_id',
-                            'label' => '采集器',
-                            'driver' => FormItemSelect::class,
-                            'keyValues' => $pullDriverKeyValues,
-                        ],
                     ],
                 ],
 
                 'titleRightToolbar' => [
                     'items' => [
                         [
-                            'label' => '新建采集任务',
+                            'label' => '新建发布器',
                             'action' => 'create',
                             'target' => 'self', // 'ajax - ajax请求 / dialog - 对话框窗口 / drawer - 抽屉 / self - 当前页面 / blank - 新页面'
                             'ui' => [
@@ -139,56 +130,13 @@ class PullTask extends Auth
                         ],
                         [
                             'name' => 'name',
-                            'label' => '采集任务名称',
+                            'label' => '名称',
                             'driver' => TableItemLink::class,
                             'align' => 'left',
                             'task' => 'detail',
                             'drawer' => [
                                 'width' => '80%'
                             ],
-                        ],
-                        [
-                            'name' => 'pull_driver_name',
-                            'label' => '采集器名称',
-                            'align' => 'left',
-                            'value' => function ($row) {
-                                $sql = 'SELECT `name` FROM monkey_pull_driver WHERE id = ?';
-                                $pullDriverName = Be::getDb()->getValue($sql, [$row['pull_driver_id']]);
-                                if ($pullDriverName) {
-                                    return $pullDriverName;
-                                } else {
-                                    return '-';
-                                }
-                            },
-                        ],
-                        [
-                            'name' => 'content_count',
-                            'label' => '采集的内容',
-                            'align' => 'center',
-                            'width' => '120',
-                            'driver' => TableItemLink::class,
-                            'value' => function ($row) {
-                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_task_id = ?';
-                                $count = Be::getDb()->getValue($sql, [$row['id']]);
-                                return $count;
-                            },
-                            'action' => 'showContents',
-                            'target' => 'self',
-                        ],
-                        [
-                            'name' => 'filed_count',
-                            'label' => '字段数',
-                            'align' => 'center',
-                            'width' => '80',
-                            'value' => function ($row) {
-                                $fields = unserialize($row['fields']);
-                                return count($fields);
-                            },
-                        ],
-                        [
-                            'name' => 'version',
-                            'label' => '子版本',
-                            'width' => '80',
                         ],
                         [
                             'name' => 'ordering',
@@ -215,8 +163,8 @@ class PullTask extends Auth
                             [
                                 'label' => '',
                                 'tooltip' => '安装',
-                                'action' => 'install',
-                                'target' => 'blank',
+                                'action' => 'edit',
+                                'target' => 'self',
                                 'ui' => [
                                     'type' => 'success',
                                     ':underline' => 'false',
@@ -228,8 +176,8 @@ class PullTask extends Auth
                             [
                                 'label' => '',
                                 'tooltip' => '启动',
-                                'action' => 'run',
-                                'target' => 'blank',
+                                'action' => 'edit',
+                                'target' => 'self',
                                 'ui' => [
                                     'type' => 'danger',
                                     ':underline' => 'false',
@@ -252,7 +200,6 @@ class PullTask extends Auth
                             [
                                 'label' => '',
                                 'tooltip' => '删除',
-                                'task' => 'fieldEdit',
                                 'postData' => [
                                     'field' => 'is_delete',
                                     'value' => '1',
@@ -272,7 +219,7 @@ class PullTask extends Auth
             ],
 
             'detail' => [
-                'title' => '采集任务详情',
+                'title' => '采集任务采集任务详情',
                 'theme' => 'Blank',
                 'form' => [
                     'items' => [
@@ -350,157 +297,15 @@ class PullTask extends Auth
                 ],
             ],
 
+            'fieldEdit' => [
+                'events' => [
+                    'before' => function ($tuple) {
+                        $tuple->update_time = date('Y-m-d H:i:s');
+                    },
+                ],
+            ],
+
         ])->execute();
     }
 
-    /**
-     * 新建采集任务
-     *
-     * @BePermission("新建", ordering="1.21")
-     */
-    public function create()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        $pullDriverId = $request->get('pull_driver_id', '');
-
-        if ($request->isAjax()) {
-            try {
-                Be::getService('App.Monkey.Admin.PullTask')->edit($request->json('formData'));
-                $response->set('success', true);
-                $response->set('message', '新建采集任务成功！');
-                $response->json();
-            } catch (\Throwable $t) {
-                $response->set('success', false);
-                $response->set('message', $t->getMessage());
-                $response->json();
-            }
-        } else {
-            if ($pullDriverId === '') {
-                $pullDrivers = Be::getService('App.Monkey.Admin.PullDriver')->getPullDrivers();
-                $response->set('pullDrivers', $pullDrivers);
-
-                $response->set('title', '新建采集任务');
-                $response->display('App.Monkey.Admin.PullTask.selectPullDriver');
-            } else {
-                $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pullDriverId);
-                $response->set('pullDriver', $pullDriver);
-
-                $response->set('pullTask', false);
-
-                $response->set('title', '新建采集任务');
-                $response->display('App.Monkey.Admin.PullTask.edit');
-            }
-        }
-    }
-
-    /**
-     * 编辑
-     *
-     * @BePermission("编辑", ordering="1.22")
-     */
-    public function edit()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        if ($request->isAjax()) {
-            try {
-                Be::getService('App.Monkey.Admin.PullTask')->edit($request->json('formData'));
-                $response->set('success', true);
-                $response->set('message', '编辑采集任务成功！');
-                $response->json();
-            } catch (\Throwable $t) {
-                $response->set('success', false);
-                $response->set('message', $t->getMessage());
-                $response->json();
-            }
-        } elseif ($request->isPost()) {
-            $postData = $request->post('data', '', '');
-            if ($postData) {
-                $postData = json_decode($postData, true);
-                if (isset($postData['row']['id']) && $postData['row']['id']) {
-                    $response->redirect(beAdminUrl('Monkey.PullTask.edit', ['id' => $postData['row']['id']]));
-                }
-            }
-        } else {
-            $pullTaskId = $request->get('id', '');
-            $pullTask = Be::getService('App.Monkey.Admin.PullTask')->getPullTask($pullTaskId);
-            $response->set('pullTask', $pullTask);
-
-            $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pullTask->pull_driver_id);
-            $response->set('pullDriver', $pullDriver);
-
-            $response->set('title', '编辑采集任务');
-
-            $response->display();
-        }
-    }
-
-    /**
-     * 安装脚本
-     *
-     * @BePermission("*")
-     */
-    public function install()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        $postData = $request->post('data', '', '');
-        if ($postData) {
-            $postData = json_decode($postData, true);
-            if (isset($postData['row']['id']) && $postData['row']['id']) {
-                //$response->redirect(beUrl('Monkey.PullTask.install', ['id' => $postData['row']['id']]));
-
-                $response->write('<meta charset="utf-8" />');
-                $response->write('如果您已安装油猴插件，将自动弹出安装/更新油猴脚本界面，如果未弹出，请检查浏览器扩展！');
-                $response->write('<script>');
-                $response->write('window.location.href="' . beUrl('Monkey.PullTask.install', ['id' => $postData['row']['id']]) . '";');
-                $response->write( '</script>');
-            }
-        }
-    }
-
-    /**
-     * 开始采集
-     *
-     * @BePermission("*")
-     */
-    public function run()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        $postData = $request->post('data', '', '');
-        if ($postData) {
-            $postData = json_decode($postData, true);
-            if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $pullTask = Be::getService('App.Monkey.Admin.PullTask')->getPullTask($postData['row']['id']);
-                $response->set('pullTask', $pullTask);
-                $response->set('title', '即将开始采集');
-                $response->display();
-            }
-        }
-    }
-
-    /**
-     * 查看采集的内容
-     *
-     * @BePermission("*")
-     */
-    public function showContents()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        $postData = $request->post('data', '', '');
-        if ($postData) {
-            $postData = json_decode($postData, true);
-            if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.Content.contents', ['pull_task_id' => $postData['row']['id']]));
-            }
-        }
-    }
 }

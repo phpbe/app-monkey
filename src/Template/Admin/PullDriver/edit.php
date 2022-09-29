@@ -1,4 +1,10 @@
 <be-head>
+    <?php
+    $appSystemWwwUrl = \Be\Be::getProperty('App.System')->getWwwUrl();
+    ?>
+    <script src="<?php echo $appSystemWwwUrl; ?>/lib/sortable/sortable.min.js"></script>
+    <script src="<?php echo $appSystemWwwUrl; ?>/lib/vuedraggable/vuedraggable.umd.min.js"></script>
+
     <style>
         .el-form-item {
             margin-bottom: inherit;
@@ -25,6 +31,53 @@
         .monkey-pull-driver-form-table td {
             padding: .4rem 0;
             vertical-align: middle;
+        }
+
+
+        .field-item-header {
+            color: #666;
+            background-color: #EBEEF5;
+            height: 3rem;
+            line-height: 3rem;
+            margin-bottom: .5rem;
+        }
+
+        .field-item {
+            background-color: #fff;
+            border-bottom: #EBEEF5 1px solid;
+            padding-top: .5rem;
+            padding-bottom: .5rem;
+            margin-bottom: 2px;
+        }
+
+        .field-item-drag-icon {
+            width: 40px;
+            text-align: center;
+        }
+
+        .field-item-drag-icon i {
+            color: #ccc;
+            font-size: 20px;
+            cursor: move;
+        }
+
+        .field-item-drag-icon i:hover {
+            color: #409EFF;
+        }
+
+        .field-item-name {
+            width: 90px;
+            overflow: hidden;
+        }
+
+        .field-item-is-title {
+            width: 90px;
+            text-align: center;
+        }
+
+        .field-item-op {
+            width: 40px;
+            text-align: center;
         }
 
     </style>
@@ -301,18 +354,63 @@
                             采集字段：
                         </div>
 
-                        <div class="be-row">
+                        <div class="be-row be-mt-100">
                             <div class="be-col-auto">
-                                <table class="monkey-pull-driver-form-table be-mt-100">
-                                    <tr v-for="(field, fieldIndex) in formData.fields">
-                                        <td>
-                                            <el-link type="primary" @click="editField(field)">{{field.name}}</el-link>
-                                        </td>
-                                        <td>
-                                            <el-link type="danger" icon="el-icon-delete" @click="deleteField(field)"></el-link>
-                                        </td>
-                                    </tr>
-                                </table>
+                                <div class="be-row field-item-header">
+                                    <div class="be-col-auto">
+                                        <div class="field-item-drag-icon">
+                                        </div>
+                                    </div>
+                                    <div class="be-col-auto">
+                                        <div class="field-item-name">
+                                            名称
+                                        </div>
+                                    </div>
+                                    <div class="be-col-auto">
+                                        <div class="field-item-is-title">
+                                            是否标题字段
+                                        </div>
+                                    </div>
+                                    <div class="be-col-auto">
+                                        <div class="field-item-op">
+                                            操作
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <draggable
+                                        v-model="formData.fields"
+                                        ghost-class="field-item-ghost"
+                                        chosen-class="field-item-chosen"
+                                        drag-class="field-item-drag"
+                                        handle=".field-item-drag-icon"
+                                        force-fallback="true"
+                                        animation="100">
+                                    <transition-group>
+                                        <div class="be-row field-item" v-for="field, fieldIndex in formData.fields" :key="field.name">
+                                            <div class="be-col-auto">
+                                                <div class="field-item-drag-icon">
+                                                    <i class="el-icon-rank"></i>
+                                                </div>
+                                            </div>
+                                            <div class="be-col-auto">
+                                                <div class="field-item-name">
+                                                    <el-link type="primary" @click="editField(field)">{{field.name}}</el-link>
+                                                </div>
+                                            </div>
+                                            <div class="be-col-auto">
+                                                <div class="field-item-is-title">
+                                                    <el-switch v-model.number="field.is_title" :active-value="1" :inactive-value="0" @change="updateFieldsIsTitle(field)"></el-switch>
+                                                </div>
+                                            </div>
+                                            <div class="be-col-auto">
+                                                <div class="field-item-op">
+                                                    <el-link type="danger" icon="el-icon-delete" @click="deleteField(field)"></el-link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </transition-group>
+                                </draggable>
 
                                 <el-button class="be-mt-100" stze="small" type="primary" @click="addField">新增字段</el-button>
                             </div>
@@ -323,6 +421,7 @@
 
                             <div class="be-col">
                                 <div v-show="fieldForm">
+
                                     <div class="be-row">
                                         <div class="be-col-auto be-lh-250">字段名称：</div>
                                         <div class="be-col">
@@ -359,16 +458,6 @@
 
                                     $uiItems->add($driver);
                                     ?>
-
-                                    <div class="be-row be-mt-100">
-                                        <div class="be-col-auto">是否标题字段：</div>
-                                        <div class="be-col">
-                                            <el-switch v-model.number="formData.field_is_title" :active-value="1" :inactive-value="0"></el-switch>
-                                            <?php
-                                            $formData['field_is_title'] = 0;
-                                            ?>
-                                        </div>
-                                    </div>
 
                                     <div class="be-mt-150 be-ta-right">
                                         <el-button stze="small" type="primary" :disabled="formData.field_name===''" @click="saveField">确定</el-button>
@@ -420,7 +509,6 @@
                     this.field = false;
                     this.formData.field_name = "";
                     this.formData.field_script = "";
-                    this.formData.field_is_title = 0;
 
                     this.formItems.field_script.codeMirror.setValue(this.formData.field_script);
 
@@ -430,7 +518,6 @@
                     this.field = field;
                     this.formData.field_name = field.name;
                     this.formData.field_script = field.script;
-                    this.formData.field_is_title = field.is_title;
 
                     this.formItems.field_script.codeMirror.setValue(this.formData.field_script);
 
@@ -442,17 +529,17 @@
                     if (this.field) {
                         this.field.name = this.formData.field_name;
                         this.field.script = this.formData.field_script;
-                        this.field.is_title = this.formData.field_is_title;
                     } else {
                         this.formData.fields.push({
                             id : "",
                             name: this.formData.field_name,
                             script: this.formData.field_script,
-                            is_title: this.formData.field_is_title,
+                            is_title: 0,
                         });
                     }
 
                     this.fieldForm = false;
+                    this.updateFieldsIsTitle(false);
                 },
                 deleteField(field) {
                     let _this = this;
@@ -462,9 +549,58 @@
                         type: "warning"
                     }).then(function(){
                         _this.formData.fields.splice(_this.formData.fields.indexOf(field), 1);
+                        _this.updateFieldsIsTitle(false);
                     }).catch(function(){});
                 },
+                updateFieldsIsTitle(field) {
+                    if (this.formData.fields.length === 0) {
+                        return;
+                    }
 
+                    let counter = 0;
+                    for (let f of this.formData.fields) {
+                        if (f.is_title === 1) {
+                            counter++;
+                        }
+                    }
+
+                    if (counter > 1) {
+                        if (field === false || field.is_title === 0) {
+                            counter = 0;
+                            for (let f of this.formData.fields) {
+                                if (f.is_title === 1) {
+                                    if (counter >= 1) {
+                                        f.is_title = 0;
+                                    }
+                                    counter++;
+                                }
+                            }
+                        } else {
+                            for (let f of this.formData.fields) {
+                                if (f !== field) {
+                                    f.is_title = 0;
+                                }
+                            }
+                        }
+                    } else if (counter === 0) {
+                        if (field === false) {
+                            this.formData.fields[0].is_title = 1;
+                        } else {
+                            counter = 0;
+                            for (let f of this.formData.fields) {
+                                if (f !== field && counter === 0) {
+                                    f.is_title = 1;
+                                    counter++;
+                                    break;
+                                }
+                            }
+
+                            if (counter === 0) {
+                                this.formData.fields[0].is_title = 1;
+                            }
+                        }
+                    }
+                },
                 save: function (command) {
                     let _this = this;
                     this.$refs["formRef"].validate(function (valid) {

@@ -57,7 +57,7 @@ class Content
 
             $found = false;
             foreach ($fields as $f) {
-                if ($field['name'] === $f->name) {
+                if ($field['name'] === $f['name']) {
                     $found = true;
                     break;
                 }
@@ -80,10 +80,10 @@ class Content
         foreach ($fields as $f) {
             $found = false;
             foreach ($data['fields'] as $field) {
-                if ($field['name'] === $f->name) {
+                if ($field['name'] === $f['name']) {
                     $found = true;
 
-                    if ($f->is_title === '1') {
+                    if ($f['is_title'] === 1) {
                         $title = $field['content'];
                     }
                     break;
@@ -109,7 +109,7 @@ class Content
             $tupleContent = Be::getTuple('monkey_content');
             try {
                 $tupleContent->loadBy([
-                    'task_id' => $data['task_id'],
+                    'pull_task_id' => $data['pull_task_id'],
                     'url' => $data['url'],
                 ]);
             } catch (\Throwable $t) {
@@ -118,7 +118,7 @@ class Content
             $isNew = !$tupleContent->isLoaded();
 
             $now = date('Y-m-d H:i:s');
-            $tupleContent->task_id = $data['task_id'];
+            $tupleContent->pull_task_id = $data['pull_task_id'];
             $tupleContent->url = $data['url'];
             $tupleContent->title = $title;
             $tupleContent->fields = serialize($data['fields']);

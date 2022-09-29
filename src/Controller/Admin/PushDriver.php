@@ -14,7 +14,7 @@ use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
 
 /**
- * @BeMenuGroup("发布", icon="el-icon-upload", ordering="3")
+ * @BeMenuGroup("发布")
  * @BePermissionGroup("发布")
  */
 class PushDriver extends Auth
@@ -23,8 +23,8 @@ class PushDriver extends Auth
     /**
      * 发布器
      *
-     * @BeMenu("发布器", icon="el-icon-upload", ordering="1.2")
-     * @BePermission("发布器", ordering="1.2")
+     * @BeMenu("发布器", icon="bi-cloud-upload", ordering="3.2")
+     * @BePermission("发布器", ordering="3.2")
      */
     public function drivers()
     {
