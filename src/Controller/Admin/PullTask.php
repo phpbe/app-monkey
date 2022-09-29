@@ -18,24 +18,24 @@ use Be\Be;
  * @BeMenuGroup("采集")
  * @BePermissionGroup("采集")
  */
-class Task extends Auth
+class PullTask extends Auth
 {
 
     /**
-     * 采集采集器
+     * 采集器
      *
      * @BeMenu("采集任务", icon="el-icon-video-play", ordering="1.2")
      * @BePermission("采集任务", ordering="1.2")
      */
-    public function tasks()
+    public function pullTasks()
     {
 
-        $ruleKeyValues = Be::getService('App.Monkey.Admin.Rule')->getRuleKeyValues();
+        $pullDriverKeyValues = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriverKeyValues();
 
         Be::getAdminPlugin('Curd')->setting([
 
             'label' => '采集任务',
-            'table' => 'monkey_task',
+            'table' => 'monkey_pull_task',
 
             'grid' => [
                 'title' => '采集任务',
@@ -59,10 +59,10 @@ class Task extends Auth
                             ],
                         ],
                         [
-                            'name' => 'rule_id',
+                            'name' => 'pull_driver_id',
                             'label' => '采集器',
                             'driver' => FormItemSelect::class,
-                            'keyValues' => $ruleKeyValues,
+                            'keyValues' => $pullDriverKeyValues,
                         ],
                     ],
                 ],
@@ -148,14 +148,14 @@ class Task extends Auth
                             ],
                         ],
                         [
-                            'name' => 'rule_name',
+                            'name' => 'pull_driver_name',
                             'label' => '采集器名称',
                             'align' => 'left',
                             'value' => function ($row) {
-                                $sql = 'SELECT `name` FROM monkey_rule WHERE id = ?';
-                                $ruleName = Be::getDb()->getValue($sql, [$row['rule_id']]);
-                                if ($ruleName) {
-                                    return $ruleName;
+                                $sql = 'SELECT `name` FROM monkey_pull_driver WHERE id = ?';
+                                $pullDriverName = Be::getDb()->getValue($sql, [$row['pull_driver_id']]);
+                                if ($pullDriverName) {
+                                    return $pullDriverName;
                                 } else {
                                     return '-';
                                 }
@@ -168,7 +168,7 @@ class Task extends Auth
                             'width' => '120',
                             'driver' => TableItemLink::class,
                             'value' => function ($row) {
-                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE task_id = ?';
+                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_task_id = ?';
                                 $count = Be::getDb()->getValue($sql, [$row['id']]);
                                 return $count;
                             },
@@ -353,7 +353,7 @@ class Task extends Auth
         $request = Be::getRequest();
         $response = Be::getResponse();
 
-        $ruleId = $request->get('rule_id', '');
+        $pullDriverId = $request->get('pull_driver_id', '');
 
         if ($request->isAjax()) {
             try {
@@ -367,20 +367,20 @@ class Task extends Auth
                 $response->json();
             }
         } else {
-            if ($ruleId === '') {
-                $rules = Be::getService('App.Monkey.Admin.Rule')->getRules();
-                $response->set('rules', $rules);
+            if ($pullDriverId === '') {
+                $pullDrivers = Be::getService('App.Monkey.Admin.PullDriver')->getPullDrivers();
+                $response->set('rules', $pullDrivers);
 
                 $response->set('title', '新建采集任务');
-                $response->display('App.Monkey.Admin.Task.selectRule');
+                $response->display('App.Monkey.Admin.PullTask.selectRule');
             } else {
-                $rule = Be::getService('App.Monkey.Admin.Rule')->getRule($ruleId);
-                $response->set('rule', $rule);
+                $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pullDriverId);
+                $response->set('rule', $pullDriver);
 
                 $response->set('task', false);
 
                 $response->set('title', '新建采集任务');
-                $response->display('App.Monkey.Admin.Task.edit');
+                $response->display('App.Monkey.Admin.PullTask.edit');
             }
         }
     }
@@ -411,16 +411,16 @@ class Task extends Auth
             if ($postData) {
                 $postData = json_decode($postData, true);
                 if (isset($postData['row']['id']) && $postData['row']['id']) {
-                    $response->redirect(beAdminUrl('Monkey.Task.edit', ['id' => $postData['row']['id']]));
+                    $response->redirect(beAdminUrl('Monkey.PullTask.edit', ['id' => $postData['row']['id']]));
                 }
             }
         } else {
-            $taskId = $request->get('id', '');
-            $task = Be::getService('App.Monkey.Admin.Task')->getTask($taskId);
-            $response->set('task', $task);
+            $pullTaskId = $request->get('id', '');
+            $pullTask = Be::getService('App.Monkey.Admin.PullTask')->getPullTask($pullTaskId);
+            $response->set('task', $pullTask);
 
-            $rule = Be::getService('App.Monkey.Admin.Rule')->getRule($task->rule_id);
-            $response->set('rule', $rule);
+            $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pullTask->pull_driver_id);
+            $response->set('rule', $pullDriver);
 
             $response->set('title', '编辑采集任务');
 
@@ -442,12 +442,12 @@ class Task extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                //$response->redirect(beUrl('Monkey.Task.install', ['id' => $postData['row']['id']]));
+                //$response->redirect(beUrl('Monkey.PullTask.install', ['id' => $postData['row']['id']]));
 
                 $response->write('<meta charset="utf-8" />');
                 $response->write('如果您已安装油猴插件，将自动弹出安装/更新油猴脚本界面，如果未弹出，请检查浏览器扩展！');
                 $response->write('<script>');
-                $response->write('window.location.href="' . beUrl('Monkey.Task.install', ['id' => $postData['row']['id']]) . '";');
+                $response->write('window.location.href="' . beUrl('Monkey.PullTask.install', ['id' => $postData['row']['id']]) . '";');
                 $response->write( '</script>');
             }
         }
@@ -467,8 +467,8 @@ class Task extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $task = Be::getService('App.Monkey.Admin.Task')->getTask($postData['row']['id']);
-                $response->set('task', $task);
+                $pullTask = Be::getService('App.Monkey.Admin.PullTask')->getPullTask($postData['row']['id']);
+                $response->set('pullTask', $pullTask);
                 $response->set('title', '即将开始采集');
                 $response->display();
             }
@@ -489,7 +489,7 @@ class Task extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.Content.contents', ['task_id' => $postData['row']['id']]));
+                $response->redirect(beAdminUrl('Monkey.Content.contents', ['pull_task_id' => $postData['row']['id']]));
             }
         }
     }

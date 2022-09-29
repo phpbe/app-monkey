@@ -15,23 +15,22 @@ class Content
      */
     public function receive(array $data)
     {
-        if (!isset($data['task_id']) || !is_string($data['task_id'])) {
-            throw new ServiceException('参数（task_id）参数缺失！');
+        if (!isset($data['pull_task_id']) || !is_string($data['pull_task_id'])) {
+            throw new ServiceException('参数（pull_task_id）参数缺失！');
         }
-        $data['task_id'] = trim($data['task_id']);
-        if ($data['task_id'] === '') {
-            throw new ServiceException('参数（task_id）不能为空！');
+        $data['pull_task_id'] = trim($data['pull_task_id']);
+        if ($data['pull_task_id'] === '') {
+            throw new ServiceException('参数（pull_task_id）不能为空！');
         }
 
         $db = Be::getDb();
-        $sql = 'SELECT * FROM monkey_task WHERE id=? AND is_delete = 0';
-        $task = $db->getObject($sql, [$data['task_id']]);
-        if (!$task) {
-            throw new ServiceException('任务（# ' . $data['task_id'] . '）不存在！');
+        $sql = 'SELECT * FROM monkey_pull_task WHERE id=? AND is_delete = 0';
+        $pullTask = $db->getObject($sql, [$data['pull_task_id']]);
+        if (!$pullTask) {
+            throw new ServiceException('采集任务（# ' . $data['pull_task_id'] . '）不存在！');
         }
 
-        $sql = 'SELECT * FROM monkey_task_field WHERE task_id=? ORDER BY `ordering` DESC';
-        $fields = $db->getObjects($sql, [$data['task_id']]);
+        $fields = unserialize($pullTask->fields);
 
         if (!isset($data['url']) || !is_string($data['url'])) {
             throw new ServiceException('参数（url）缺失！');
@@ -48,24 +47,24 @@ class Content
 
         $i = 1;
         foreach ($data['fields'] as &$field) {
-            if (!isset($field['id']) || !is_string($field['id'])) {
-                throw new ServiceException('参数（fields）第 ' . $i . ' 项的子参数（id）缺失！');
+            if (!isset($field['name']) || !is_string($field['name'])) {
+                throw new ServiceException('参数（fields）第 ' . $i . ' 项的子参数（name）缺失！');
             }
-            $field['id'] = trim($field['id']);
-            if ($field['id'] === '') {
-                throw new ServiceException('参数（fields）第 ' . $i . ' 项的子参数（id）不能为空！');
+            $field['name'] = trim($field['name']);
+            if ($field['name'] === '') {
+                throw new ServiceException('参数（fields）第 ' . $i . ' 项的子参数（name）不能为空！');
             }
 
             $found = false;
             foreach ($fields as $f) {
-                if ($field['id'] === $f->id) {
+                if ($field['name'] === $f->name) {
                     $found = true;
                     break;
                 }
             }
 
             if (!$found) {
-                throw new ServiceException('参数（fields）第' . $i . '项的子参数（id - #' . $field['id'] . '）无法识别！');
+                throw new ServiceException('参数（fields）第' . $i . '项的子参数（name：' . $field['name'] . '）无法识别！');
             }
 
             if (!isset($field['content']) || !is_string($field['content'])) {
@@ -81,7 +80,7 @@ class Content
         foreach ($fields as $f) {
             $found = false;
             foreach ($data['fields'] as $field) {
-                if ($field['id'] === $f->id) {
+                if ($field['name'] === $f->name) {
                     $found = true;
 
                     if ($f->is_title === '1') {
@@ -92,7 +91,7 @@ class Content
             }
 
             if (!$found) {
-                throw new ServiceException('采集字段' . $f->name . '（#' . $f->id . '）缺失！');
+                throw new ServiceException('采集字段 ' . $f->name . ' 缺失！');
             }
         }
 

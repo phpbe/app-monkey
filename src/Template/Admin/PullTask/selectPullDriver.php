@@ -18,7 +18,7 @@
         <div class="be-row">
             <div class="be-col">
                 <div style="padding: 1.25rem 0 0 2rem;">
-                    <el-link icon="el-icon-back" href="<?php echo beAdminUrl('Monkey.Task.tasks'); ?>">返回任务列表</el-link>
+                    <el-link icon="el-icon-back" href="<?php echo beAdminUrl('Monkey.PullTask.pullTasks'); ?>">返回任务列表</el-link>
                 </div>
             </div>
             <div class="be-col-auto">
@@ -53,12 +53,12 @@
                  <div class="be-col-auto">
 
                      <div class="be-p-150 be-bc-fff">
-                     <div><span class="be-c-red">*</span> 采集规则：</div>
+                     <div><span class="be-c-red">*</span> 采集器：</div>
                      <div class="be-mt-50 be-b-eee" style="min-height: 300px; height: calc(100vh - 200px); overflow-y: scroll;">
-                         <div class="be-px-100 be-py-50" v-for="(rule, ruleIndex) in rules">
-                             <el-radio v-model="formData.rule_id" :label="rule.id" @change="toggle(rule);">{{rule.name}}</el-radio>
+                         <div class="be-px-100 be-py-50" v-for="(pullDriver, pullDriverIndex) in pullDrivers">
+                             <el-radio v-model="formData.pull_driver_id" :label="pullDriver.id" @change="toggle(pullDriver);">{{pullDriver.name}}</el-radio>
                          </div>
-                         <?php $formData['role_id'] = ''; ?>
+                         <?php $formData['pull_driver_id'] = ''; ?>
                      </div>
 
                      </div>
@@ -70,31 +70,31 @@
 
                  <div class="be-col">
 
-                     <div class="be-p-150 be-bc-fff" style="height: 100%;" v-show="rule != false">
+                     <div class="be-p-150 be-bc-fff" style="height: 100%;" v-show="pullDriver != false">
                          <table class="monkey-task-form-table">
                              <tr>
-                                 <td>规则名称：</td>
-                                 <td>{{rule.name}}</td>
+                                 <td>采集器名称：</td>
+                                 <td>{{pullDriver.name}}</td>
                              </tr>
                              <tr>
                                  <td>描述：</td>
-                                 <td><div v-html="rule.description"></div></td>
+                                 <td><div v-html="pullDriver.description"></div></td>
                              </tr>
                              <tr>
                                  <td>匹配网址：</td>
                                  <td>
-                                     {{rule.match_1}}
-                                     <div class="be-mt-50" v-if="rule.match_2 !== ''">
-                                         <br>{{rule.match_2}}
+                                     {{pullDriver.match_1}}
+                                     <div class="be-mt-50" v-if="pullDriver.match_2 !== ''">
+                                         <br>{{pullDriver.match_2}}
                                      </div>
-                                     <div class="be-mt-50" v-if="rule.match_2 !== ''">
-                                         <br>{{rule.match_2}}
+                                     <div class="be-mt-50" v-if="pullDriver.match_2 !== ''">
+                                         <br>{{pullDriver.match_2}}
                                      </div>
                                  </td>
                              </tr>
                              <tr>
                                  <td>起始网址：</td>
-                                 <td>{{rule.start_page}}</td>
+                                 <td>{{pullDriver.start_page}}</td>
                              </tr>
                              <tr>
                                  <td>获取下一页脚本：</td>
@@ -128,11 +128,11 @@
                              </tr>
                              <tr>
                                  <td>创建时间：</td>
-                                 <td>{{rule.create_time}}</td>
+                                 <td>{{pullDriver.create_time}}</td>
                              </tr>
                              <tr>
                                  <td>更新时间：</td>
-                                 <td>{{rule.update_time}}</td>
+                                 <td>{{pullDriver.update_time}}</td>
                              </tr>
                          </table>
                  </div>
@@ -152,8 +152,8 @@
             el: '#app',
             data: {
                 formData: <?php echo json_encode($formData); ?>,
-                rules: <?php echo json_encode($this->rules); ?>,
-                rule: false,
+                pullDrivers: <?php echo json_encode($this->pullDrivers); ?>,
+                pullDriver: false,
 
                 loading: false,
 
@@ -163,25 +163,25 @@
                 ?>
             },
             methods: {
-                toggle: function (rule) {
-                    this.rule = rule;
-                    this.detailItems.get_next_page_script.codeMirror.setValue(rule.get_next_page_script);
-                    this.detailItems.get_links_script.codeMirror.setValue(rule.get_links_script);
+                toggle: function (pullDriver) {
+                    this.pullDriver = pullDriver;
+                    this.detailItems.get_next_page_script.codeMirror.setValue(pullDriver.get_next_page_script);
+                    this.detailItems.get_links_script.codeMirror.setValue(pullDriver.get_links_script);
                 },
                 save: function () {
-                    if (this.rule === false) {
-                        this.$message.error("请选择一个采集规则！");
+                    if (this.pullDriver === false) {
+                        this.$message.error("请选择一个采集器！");
                         return;
                     }
 
-                    let url = "<?php echo beAdminUrl('Monkey.Task.create'); ?>";
+                    let url = "<?php echo beAdminUrl('Monkey.PullTask.create'); ?>";
                     url += (url.indexOf("?") === -1 ? '?' : '&');
-                    url += "rule_id=" + this.rule.id;
+                    url += "pull_driver_id=" + this.pullDriver.id;
                     window.location.href = url;
                 },
                 cancel: function () {
                     window.onbeforeunload = null;
-                    window.location.href = "<?php echo beAdminUrl('Monkey.Task.tasks'); ?>";
+                    window.location.href = "<?php echo beAdminUrl('Monkey.PullTask.pullTasks'); ?>";
                 },
 
                 <?php

@@ -25,7 +25,7 @@ class Content extends Auth
      */
     public function contents()
     {
-        $taskKeyValues = Be::getService('App.Monkey.Admin.Task')->getTaskKeyValues();
+        $pullTaskKeyValues = Be::getService('App.Monkey.Admin.PullTask')->getPullTaskKeyValues();
 
         Be::getAdminPlugin('Curd')->setting([
 
@@ -53,7 +53,7 @@ class Content extends Auth
                             'name' => 'task_id',
                             'label' => '采集器',
                             'driver' => FormItemSelect::class,
-                            'keyValues' => $taskKeyValues,
+                            'keyValues' => $pullTaskKeyValues,
                         ],
                     ],
                 ],
@@ -102,10 +102,10 @@ class Content extends Auth
                             'width' => '250',
                             'align' => 'left',
                             'value' => function ($row) {
-                                $sql = 'SELECT `name` FROM monkey_task WHERE id = ?';
-                                $taskName = Be::getDb()->getValue($sql, [$row['task_id']]);
-                                if ($taskName) {
-                                    return $taskName;
+                                $sql = 'SELECT `name` FROM monkey_pull_task WHERE id = ?';
+                                $pullTaskName = Be::getDb()->getValue($sql, [$row['pull_task_id']]);
+                                if ($pullTaskName) {
+                                    return $pullTaskName;
                                 } else {
                                     return '-';
                                 }

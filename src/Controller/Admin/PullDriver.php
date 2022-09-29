@@ -9,7 +9,6 @@ use Be\AdminPlugin\Table\Item\TableItemLink;
 use Be\AdminPlugin\Form\Item\FormItemSelect;
 use Be\AdminPlugin\Table\Item\TableItemSelection;
 use Be\AdminPlugin\Table\Item\TableItemSwitch;
-use Be\AdminPlugin\Toolbar\Item\ToolbarItemDropDown;
 use Be\AdminPlugin\Toolbar\Item\ToolbarItemLink;
 use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
@@ -18,7 +17,7 @@ use Be\Be;
  * @BeMenuGroup("采集", icon="bi-cloud-arrow-down", ordering="1")
  * @BePermissionGroup("采集")
  */
-class Rule extends Auth
+class PullDriver extends Auth
 {
 
     /**
@@ -27,12 +26,12 @@ class Rule extends Auth
      * @BeMenu("采集器", icon="el-icon-connection", ordering="1.1")
      * @BePermission("采集器", ordering="1.1")
      */
-    public function rules()
+    public function pullDrivers()
     {
         Be::getAdminPlugin('Curd')->setting([
 
             'label' => '采集器',
-            'table' => 'monkey_rule',
+            'table' => 'monkey_pull_driver',
 
             'grid' => [
                 'title' => '采集器',
@@ -173,9 +172,8 @@ class Rule extends Auth
                             'align' => 'center',
                             'width' => '80',
                             'value' => function ($row) {
-                                $sql = 'SELECT COUNT(*) FROM monkey_rule_field WHERE rule_id = ?';
-                                $count = Be::getDb()->getValue($sql, [$row['id']]);
-                                return $count;
+                                $fields = unserialize($row['fields']);
+                                return count($fields);
                             },
                         ],
                         [
@@ -185,11 +183,11 @@ class Rule extends Auth
                             'width' => '90',
                             'driver' => TableItemLink::class,
                             'value' => function ($row) {
-                                $sql = 'SELECT COUNT(*) FROM monkey_task WHERE rule_id = ?';
+                                $sql = 'SELECT COUNT(*) FROM monkey_pull_task WHERE pull_driver_id = ?';
                                 $count = Be::getDb()->getValue($sql, [$row['id']]);
                                 return $count;
                             },
-                            'action' => 'showTasks',
+                            'action' => 'showPullTasks',
                             'target' => 'self',
                         ],
                         [
@@ -222,7 +220,7 @@ class Rule extends Auth
                             [
                                 'label' => '',
                                 'tooltip' => '创建采集任务',
-                                'action' => 'createTask',
+                                'action' => 'createPullTask',
                                 'target' => 'self',
                                 'ui' => [
                                     'type' => 'success',
@@ -344,14 +342,14 @@ class Rule extends Auth
     /**
      * 采集器
      *
-     * @BePermission("采集器商城", ordering="1.2")
+     * @BePermission("采集器商店", ordering="1.2")
      */
-    public function storeRules()
+    public function storeDrivers()
     {
         Be::getAdminPlugin('Curd')->setting([
 
             'label' => '采集器商城',
-            'table' => 'monkey_rule',
+            'table' => 'monkey_pull_driver',
 
             'grid' => [
                 'title' => '采集器商城',
@@ -402,7 +400,7 @@ class Rule extends Auth
                             'align' => 'center',
                             'width' => '80',
                             'value' => function ($row) {
-                                $sql = 'SELECT COUNT(*) FROM monkey_rule_field WHERE rule_id = ?';
+                                $sql = 'SELECT COUNT(*) FROM monkey_pull_driver_field WHERE pull_driver_id = ?';
                                 $count = Be::getDb()->getValue($sql, [$row['id']]);
                                 return $count;
                             },
@@ -524,7 +522,7 @@ class Rule extends Auth
 
         if ($request->isAjax()) {
             try {
-                Be::getService('App.Monkey.Admin.Rule')->edit($request->json('formData'));
+                Be::getService('App.Monkey.Admin.PullDriver')->edit($request->json('formData'));
                 $response->set('success', true);
                 $response->set('message', '新建采集器成功！');
                 $response->json();
@@ -534,12 +532,12 @@ class Rule extends Auth
                 $response->json();
             }
         } else {
-            $response->set('rule', false);
+            $response->set('pullDriver', false);
 
             $response->set('title', '新建采集器');
 
             //$response->display();
-            $response->display('App.Monkey.Admin.Rule.edit');
+            $response->display('App.Monkey.Admin.PullDriver.edit');
         }
     }
 
@@ -555,7 +553,7 @@ class Rule extends Auth
 
         if ($request->isAjax()) {
             try {
-                Be::getService('App.Monkey.Admin.Rule')->edit($request->json('formData'));
+                Be::getService('App.Monkey.Admin.PullDriver')->edit($request->json('formData'));
                 $response->set('success', true);
                 $response->set('message', '编辑采集器成功！');
                 $response->json();
@@ -569,13 +567,13 @@ class Rule extends Auth
             if ($postData) {
                 $postData = json_decode($postData, true);
                 if (isset($postData['row']['id']) && $postData['row']['id']) {
-                    $response->redirect(beAdminUrl('Monkey.Rule.edit', ['id' => $postData['row']['id']]));
+                    $response->redirect(beAdminUrl('Monkey.PullDriver.edit', ['id' => $postData['row']['id']]));
                 }
             }
         } else {
-            $ruleId = $request->get('id', '');
-            $rule = Be::getService('App.Monkey.Admin.Rule')->getRule($ruleId);
-            $response->set('rule', $rule);
+            $pullDriverId = $request->get('id', '');
+            $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pullDriverId);
+            $response->set('pullDriver', $pullDriver);
 
             $response->set('title', '编辑采集器');
 
@@ -588,7 +586,7 @@ class Rule extends Auth
      *
      * @BePermission("*")
      */
-    public function showTasks()
+    public function showPullTasks()
     {
         $request = Be::getRequest();
         $response = Be::getResponse();
@@ -597,7 +595,7 @@ class Rule extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.Task.tasks', ['rule_id' => $postData['row']['id']]));
+                $response->redirect(beAdminUrl('Monkey.PullTask.tasks', ['pull_driver_id' => $postData['row']['id']]));
             }
         }
     }
@@ -607,7 +605,7 @@ class Rule extends Auth
      *
      * @BePermission("*")
      */
-    public function createTask()
+    public function createPullTask()
     {
         $request = Be::getRequest();
         $response = Be::getResponse();
@@ -616,7 +614,7 @@ class Rule extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.Task.create', ['rule_id' => $postData['row']['id']]));
+                $response->redirect(beAdminUrl('Monkey.PullTask.create', ['pull_driver_id' => $postData['row']['id']]));
             }
         }
     }

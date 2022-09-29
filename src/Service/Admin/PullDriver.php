@@ -5,64 +5,61 @@ namespace Be\App\Monkey\Service\Admin;
 use Be\App\ServiceException;
 use Be\Be;
 
-class Rule
+class PullDriver
 {
 
     /**
-     * 获取规则列表
+     * 获取采集器列表
      *
      * @return array
      */
-    public function getRules(): array
+    public function getPullDrivers(): array
     {
-        $sql = 'SELECT * FROM monkey_rule WHERE is_delete = 0 ORDER BY `ordering` DESC';
-        $rules = Be::getDb()->getObjects($sql);
-        return $rules;
+        $sql = 'SELECT * FROM monkey_pull_driver WHERE is_delete = 0 ORDER BY `ordering` DESC';
+        $pullDrivers = Be::getDb()->getObjects($sql);
+        return $pullDrivers;
     }
 
     /**
-     * 获取规则
+     * 获取采集器
      *
-     * @param string $ruleId
+     * @param string $pullDriverId
      * @return object
      */
-    public function getRule(string $ruleId): object
+    public function getPullDriver(string $pullDriverId): object
     {
         $db = Be::getDb();
 
-        $sql = 'SELECT * FROM monkey_rule WHERE id=? AND is_delete = 0';
-        $rule = $db->getObject($sql, [$ruleId]);
-        if (!$rule) {
-            throw new ServiceException('规则（# ' . $ruleId . '）不存在！');
+        $sql = 'SELECT * FROM monkey_pull_driver WHERE id=? AND is_delete = 0';
+        $pullDriver = $db->getObject($sql, [$pullDriverId]);
+        if (!$pullDriver) {
+            throw new ServiceException('采集器（# ' . $pullDriverId . '）不存在！');
         }
 
-        $rule->ordering = (int)$rule->ordering;
-        $rule->is_enable = (int)$rule->is_enable;
-        $rule->is_delete = (int)$rule->is_delete;
+        $pullDriver->ordering = (int)$pullDriver->ordering;
+        $pullDriver->is_enable = (int)$pullDriver->is_enable;
+        $pullDriver->is_delete = (int)$pullDriver->is_delete;
+        $pullDriver->fields = unserialize($pullDriver->fields);
 
-        $sql = 'SELECT * FROM monkey_rule_field WHERE rule_id=? ORDER BY `ordering` ASC';
-        $fields = $db->getObjects($sql, [$ruleId]);
-        $rule->fields = $fields;
-
-        return $rule;
+        return $pullDriver;
     }
 
     /**
-     * 获取规则键值对
+     * 获取采集器键值对
      *
      * @return array
      */
-    public function getRuleKeyValues(): array
+    public function getPullDriverKeyValues(): array
     {
-        $sql = 'SELECT id, `name` FROM monkey_rule WHERE is_delete = 0 ORDER BY `ordering` DESC';
+        $sql = 'SELECT id, `name` FROM monkey_pull_driver WHERE is_delete = 0 ORDER BY `ordering` DESC';
         return Be::getDb()->getKeyValues($sql);
     }
 
 
     /**
-     * 编辑规则
+     * 编辑采集器
      *
-     * @param array $data 规则数据
+     * @param array $data 采集器数据
      * @return object
      */
     public function edit(array $data): object
@@ -70,27 +67,27 @@ class Rule
         $db = Be::getDb();
 
         $isNew = true;
-        $ruleId = null;
+        $pullDriverId = null;
         if (isset($data['id']) && is_string($data['id']) && $data['id'] !== '') {
             $isNew = false;
-            $ruleId = $data['id'];
+            $pullDriverId = $data['id'];
         }
 
-        $tupleRule = Be::getTuple('monkey_rule');
+        $tupleRule = Be::getTuple('monkey_pull_driver');
         if (!$isNew) {
             try {
-                $tupleRule->load($ruleId);
+                $tupleRule->load($pullDriverId);
             } catch (\Throwable $t) {
-                throw new ServiceException('规则（# ' . $ruleId . '）不存在！');
+                throw new ServiceException('采集器（# ' . $pullDriverId . '）不存在！');
             }
 
             if ($tupleRule->is_delete === 1) {
-                throw new ServiceException('规则（# ' . $ruleId . '）不存在！');
+                throw new ServiceException('采集器（# ' . $pullDriverId . '）不存在！');
             }
         }
 
         if (!isset($data['name']) || !is_string($data['name'])) {
-            throw new ServiceException('规则名称未填写！');
+            throw new ServiceException('采集器名称未填写！');
         }
 
         if (!isset($data['description']) || !is_string($data['description'])) {
@@ -217,73 +214,13 @@ class Rule
                 $tupleRule->update();
             }
 
-            // 采集字段
-            if ($isNew) {
-                $ordering = 0;
-                foreach ($data['fields'] as $field) {
-                    $tupleRuleField = Be::getTuple('monkey_rule_field');
-                    $tupleRuleField->rule_id = $tupleRule->id;
-                    $tupleRuleField->name = $field['name'];
-                    $tupleRuleField->script = $field['script'];
-                    $tupleRuleField->is_title = $field['is_title'];
-                    $tupleRuleField->ordering = $ordering++;
-                    $tupleRuleField->insert();
-                }
-            } else {
-                $keepIds = [];
-                foreach ($data['fields'] as $field) {
-                    if (isset($field['id']) && $field['id'] !== '') {
-                        $keepIds[] = $field['id'];
-                    }
-                }
-
-                if (count($keepIds) > 0) {
-                    Be::getTable('monkey_rule_field')
-                        ->where('rule_id', $ruleId)
-                        ->where('id', 'NOT IN', $keepIds)
-                        ->delete();
-                } else {
-                    Be::getTable('monkey_rule_field')
-                        ->where('rule_id', $ruleId)
-                        ->delete();
-                }
-
-                $ordering = 0;
-                foreach ($data['fields'] as $field) {
-                    $tupleRuleField = Be::getTuple('monkey_rule_field');
-                    if (isset($field['id']) && $field['id'] !== '') {
-                        try {
-                            $tupleRuleField->loadBy([
-                                'id' => $field['id'],
-                                'rule_id' => $tupleRule->id,
-                            ]);
-                        } catch (\Throwable $t) {
-                            throw new ServiceException('采集规则（# ' . $ruleId . ' ' . $tupleRule->name . '）下的采集字段（# ' . $field['id'] . '）不存在！');
-                        }
-                    }
-
-                    $tupleRuleField->rule_id = $tupleRule->id;
-                    $tupleRuleField->name = $field['name'];
-                    $tupleRuleField->script = $field['script'];
-                    $tupleRuleField->is_title = $field['is_title'];
-                    $tupleRuleField->ordering = $ordering++;
-
-                    if (!isset($field['id']) || $field['id'] === '') {
-                        $tupleRuleField->create_time = $now;
-                    }
-
-                    $tupleRuleField->update_time = $now;
-                    $tupleRuleField->save();
-                }
-            }
-
             $db->commit();
 
         } catch (\Throwable $t) {
             $db->rollback();
             Be::getLog()->error($t);
 
-            throw new ServiceException(($isNew ? '新建' : '编辑') . '规则发生异常！');
+            throw new ServiceException(($isNew ? '新建' : '编辑') . '采集器发生异常！');
         }
 
         return $tupleRule->toObject();

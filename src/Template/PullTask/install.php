@@ -5,18 +5,18 @@
 }
 
 echo '// ==UserScript==' . "\n";
-echo '// @name ' . $this->task->name . "\n";
+echo '// @name ' . $this->pullTask->name . "\n";
 // @namespace    liu12
-echo '// @version ' . $this->task->version . "\n";
-echo '// @description ' . strip_tags($this->task->description) . "\n";
+echo '// @version ' . $this->pullTask->version . "\n";
+echo '// @description ' . strip_tags($this->pullTask->description) . "\n";
 // @author       刘一二
 
-echo '// @match ' . $this->task->match_1 . "\n";
-if ($this->task->match_2 !== '') {
-    echo '// @match ' . $this->task->match_2 . "\n";
+echo '// @match ' . $this->pullTask->match_1 . "\n";
+if ($this->pullTask->match_2 !== '') {
+    echo '// @match ' . $this->pullTask->match_2 . "\n";
 }
-if ($this->task->match_3 !== '') {
-    echo '// @match ' . $this->task->match_3 . "\n";
+if ($this->pullTask->match_3 !== '') {
+    echo '// @match ' . $this->pullTask->match_3 . "\n";
 }
 
 echo '// @grant GM_xmlhttpRequest' . "\n";
@@ -59,23 +59,22 @@ BeMonkey = {
 
     // 获取当前页面
     getCurrentPage: function () {
-        return "<?php echo $this->task->start_page; ?>";
+        return "<?php echo $this->pullTask->start_page; ?>";
     },
 
     getNextPage: function () {
-        <?php echo $this->task->get_next_page_script; ?>
+        <?php echo $this->pullTask->get_next_page_script; ?>
     },
 
     getLinks: function () {
-        <?php echo $this->task->get_links_script; ?>
+        <?php echo $this->pullTask->get_links_script; ?>
     },
 
     <?php
-    foreach ($this->task->fields as $field) {
-        $field->uuid = \Be\Util\Str\Uuid::strip($field->id);
+    foreach ($this->pullTask->fields as $index => $field) {
         ?>
-        getField_<?php echo $field->uuid; ?>: function () {
-            <?php echo $field->script; ?>
+        getField_<?php echo $index; ?>: function () {
+            <?php echo $field['script']; ?>
         },
         <?php
     }
@@ -164,11 +163,11 @@ BeMonkey = {
 
     // 向页面添加控制台界面
     dashboard: function () {
-        var sHtml = '<div id="be-monkey-<?php echo $this->task->id; ?>" style="position: fixed; padding: 15px; background-color: #fff; width: 400px; font-size:14px; z-index: 99999999;  border: #999 1px solid; opacity: 0.95; box-shadow: 0 0 10px #666; transition: all 0.3s;';
+        var sHtml = '<div id="be-monkey-<?php echo $this->pullTask->id; ?>" style="position: fixed; padding: 15px; background-color: #fff; width: 400px; font-size:14px; z-index: 99999999;  border: #999 1px solid; opacity: 0.95; box-shadow: 0 0 10px #666; transition: all 0.3s;';
         sHtml += this.parkMap[this.park][0] + ': 10px; '+ this.parkMap[this.park][1] +': 10px;';
         sHtml += '">'
 
-        sHtml += '<div style="font-size: 20px; font-weight: bold;"><?php echo $this->task->name; ?></div>';
+        sHtml += '<div style="font-size: 20px; font-weight: bold;"><?php echo $this->pullTask->name; ?></div>';
 
         sHtml += '<div style="padding-top: 10px;">';
         if (this.running === 0) {
@@ -181,7 +180,7 @@ BeMonkey = {
         sHtml += '</div>';
 
         sHtml += '<div style="padding-top: 10px;">';
-        sHtml += '当前操作：<span id="be-monkey-<?php echo $this->task->id; ?>-status"></span>';
+        sHtml += '当前操作：<span id="be-monkey-<?php echo $this->pullTask->id; ?>-status"></span>';
         sHtml += "</div>";
 
         if (this.step === "link") {
@@ -248,7 +247,7 @@ BeMonkey = {
         }
 
         for (let p in this.parkMap) {
-            sHtml += '<a id="be-monkey-<?php echo $this->task->id; ?>-park-' + p + '" style="position: absolute; display: block; width: 10px; height: 10px; ';
+            sHtml += '<a id="be-monkey-<?php echo $this->pullTask->id; ?>-park-' + p + '" style="position: absolute; display: block; width: 10px; height: 10px; ';
             if (this.park === p) {
                 sHtml += 'background-color: #00485b;';
             } else {
@@ -266,7 +265,7 @@ BeMonkey = {
     changePark: function (p) {
         localStorage.setItem('be:monkey:park', p);
 
-        let $e = $("#be-monkey-<?php echo $this->task->id; ?>");
+        let $e = $("#be-monkey-<?php echo $this->pullTask->id; ?>");
         if (this.parkMap[p][0] === 'left') {
             $e.css('left', "10px");
             $e.css('right', "auto");
@@ -284,7 +283,7 @@ BeMonkey = {
         }
 
         for (let pp in this.parkMap) {
-            let $p = $("#be-monkey-<?php echo $this->task->id; ?>-park-" + pp);
+            let $p = $("#be-monkey-<?php echo $this->pullTask->id; ?>-park-" + pp);
             if (p === pp) {
                 $p.css("background-color", "#00485b");
             } else {
@@ -295,7 +294,7 @@ BeMonkey = {
 
     // 设置状态
     status: function (sHtml) {
-        $("#be-monkey-<?php echo $this->task->id; ?>-status").html(sHtml);
+        $("#be-monkey-<?php echo $this->pullTask->id; ?>-status").html(sHtml);
     },
 
 
@@ -322,7 +321,7 @@ BeMonkey = {
 
             setTimeout(function () {
                 window.location.href = links[0];
-            }, <?php echo $this->task->interval; ?>);
+            }, <?php echo $this->pullTask->interval; ?>);
         } else {
 
             this.totalPageLinks = 0;
@@ -338,7 +337,7 @@ BeMonkey = {
 
                 setTimeout(function () {
                     window.location.href = nextPage;
-                }, <?php echo $this->task->interval; ?>);
+                }, <?php echo $this->pullTask->interval; ?>);
             } else {
                 this.complete();
             }
@@ -354,16 +353,15 @@ BeMonkey = {
 
             let postDataFields = [];
             <?php
-            foreach ($this->task->fields as $field) {?>
+            foreach ($this->pullTask->fields as $key => $field) {?>
             postDataFields.push({
-                id: "<?php echo $field->id; ?>",
-                name: "<?php echo $field->name; ?>",
-                content: this.getField_<?php echo $field->uuid; ?>()
+                name: "<?php echo $field['name']; ?>",
+                content: this.getField_<?php echo $key; ?>()
             });
             <?php } ?>
 
             let postData = {
-                task_id: "<?php echo $this->task->id; ?>",
+                pull_task_id: "<?php echo $this->pullTask->id; ?>",
                 url: window.location.href,
                 fields: postDataFields
             };
@@ -418,7 +416,7 @@ BeMonkey = {
 
                         setTimeout(function () {
                             window.location.href = _this.links[0];
-                        }, <?php echo $this->task->interval; ?>);
+                        }, <?php echo $this->pullTask->interval; ?>);
                     } else {
                         let nextPage = _this.getNextPage();
                         if (nextPage) {
@@ -430,7 +428,7 @@ BeMonkey = {
 
                             setTimeout(function () {
                                 window.location.href = nextPage;
-                            }, <?php echo $this->task->interval; ?>);
+                            }, <?php echo $this->pullTask->interval; ?>);
                         } else {
                             _this.complete();
                         }
@@ -448,7 +446,7 @@ BeMonkey = {
 
                 setTimeout(function () {
                     window.location.href = nextPage;
-                }, <?php echo $this->task->interval; ?>);
+                }, <?php echo $this->pullTask->interval; ?>);
             } else {
                 this.complete();
             }

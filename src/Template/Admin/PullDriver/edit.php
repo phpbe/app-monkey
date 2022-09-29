@@ -16,13 +16,13 @@
             color: #409EFF;
         }
 
-        .monkey-rule-form-table {
+        .monkey-pull-driver-form-table {
             width: 100%;
             border: none;
             border-collapse: collapse;
         }
 
-        .monkey-rule-form-table td {
+        .monkey-pull-driver-form-table td {
             padding: .4rem 0;
             vertical-align: middle;
         }
@@ -36,8 +36,8 @@
         <div class="be-row">
             <div class="be-col">
                 <div style="padding: 1.25rem 0 0 2rem;">
-                    <el-link icon="el-icon-back" href="<?php echo beAdminUrl('Monkey.Task.tasks'); ?>">
-                        返回任务列表
+                    <el-link icon="el-icon-back" href="<?php echo beAdminUrl('Monkey.PullDriver.pullDrivers'); ?>">
+                        返回采集器列表
                     </el-link>
                 </div>
             </div>
@@ -80,8 +80,7 @@
     <div id="app" v-cloak>
         <el-form ref="formRef" :model="formData" size="medium" class="be-mb-400">
             <?php
-            $formData['id'] = ($this->task ? $this->task->id : '');
-            $formData['rule_id'] = $this->rule->id;
+            $formData['id'] = ($this->pullDriver ? $this->pullDriver->id : '');
             ?>
 
             <div class="be-row">
@@ -101,7 +100,7 @@
                                             show-word-limit>
                                     </el-input>
                                 </el-form-item>
-                                <?php $formData['name'] = ($this->task ? $this->task->name :  $this->rule->name); ?>
+                                <?php $formData['name'] = ($this->pullDriver ? $this->pullDriver->name : ''); ?>
                             </div>
                         </div>
 
@@ -119,7 +118,7 @@
                         ]);
                         echo $driver->getHtml();
 
-                        $formData['description'] = ($this->task ? $this->task->description :  $this->rule->description);
+                        $formData['description'] = ($this->pullDriver ? $this->pullDriver->description : '');
 
                         $uiItems->add($driver);
                         ?>
@@ -133,14 +132,14 @@
                 <div class="be-col-24 be-lg-col">
 
                     <div class="be-p-150 be-bc-fff">
-                        <table class="monkey-rule-form-table">
+                        <table class="monkey-pull-driver-form-table">
                             <tr>
                                 <td>是否启用：</td>
                                 <td>
                                     <el-form-item prop="is_enable">
                                         <el-switch v-model.number="formData.is_enable" :active-value="1" :inactive-value="0"></el-switch>
                                     </el-form-item>
-                                    <?php $formData['is_enable'] = ($this->task ? $this->task->is_enable : 0); ?>
+                                    <?php $formData['is_enable'] = ($this->pullDriver ? $this->pullDriver->is_enable : 0); ?>
                                 </td>
                             </tr>
                             <tr>
@@ -151,7 +150,7 @@
                                             <el-input-number v-model="formData.interval"></el-input-number>
                                         </el-form-item>
                                     </el-form-item>
-                                    <?php $formData['interval'] = ($this->task ? $this->task->interval : $this->rule->interval); ?>
+                                    <?php $formData['interval'] = ($this->pullDriver ? $this->pullDriver->interval : 1000); ?>
                                 </td>
                             </tr>
                             <tr>
@@ -160,7 +159,22 @@
                                     <el-form-item prop="ordering">
                                         <el-input-number v-model="formData.ordering"></el-input-number>
                                     </el-form-item>
-                                    <?php $formData['ordering'] = ($this->task ? $this->task->ordering : 0); ?>
+                                    <?php $formData['ordering'] = ($this->pullDriver ? $this->pullDriver->ordering : 0); ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="be-c-red">*</span> 版本号：</td>
+                                <td>
+                                    <el-form-item prop="version">
+                                        <el-form-item prop="version">
+                                            <el-input v-model="formData.version">
+                                                <template slot="prepend">v</template>
+                                            </el-input>
+                                        </el-form-item>
+                                    </el-form-item>
+                                    <?php
+                                    $formData['version'] = ($this->pullDriver ? $this->pullDriver->version : '1.0.0');
+                                    ?>
                                 </td>
                             </tr>
                             <tr>
@@ -175,7 +189,7 @@
                                                 show-word-limit>
                                         </el-input>
                                     </el-form-item>
-                                    <?php $formData['match_1'] = ($this->task ? $this->task->match_1 : $this->rule->match_1); ?>
+                                    <?php $formData['match_1'] = ($this->pullDriver ? $this->pullDriver->match_1 : ''); ?>
                                 </td>
                             </tr>
                             <tr>
@@ -190,7 +204,7 @@
                                                 show-word-limit>
                                         </el-input>
                                     </el-form-item>
-                                    <?php $formData['match_2'] = ($this->task ? $this->task->match_2 : $this->rule->match_2); ?>
+                                    <?php $formData['match_2'] = ($this->pullDriver ? $this->pullDriver->match_2 : ''); ?>
                                 </td>
                             </tr>
                             <tr>
@@ -205,7 +219,7 @@
                                                 show-word-limit>
                                         </el-input>
                                     </el-form-item>
-                                    <?php $formData['match_3'] = ($this->task ? $this->task->match_3 : $this->rule->match_3); ?>
+                                    <?php $formData['match_3'] = ($this->pullDriver ? $this->pullDriver->match_3 : ''); ?>
                                 </td>
                             </tr>
                         </table>
@@ -231,7 +245,7 @@
                                             show-word-limit>
                                     </el-input>
                                 </el-form-item>
-                                <?php $formData['start_page'] = ($this->task ? $this->task->start_page : $this->rule->start_page); ?>
+                                <?php $formData['start_page'] = ($this->pullDriver ? $this->pullDriver->start_page : ''); ?>
                             </div>
                         </div>
 
@@ -250,7 +264,7 @@
                         ]);
                         echo $driver->getHtml();
 
-                        $formData['get_next_page_script'] = ($this->task ? $this->task->get_next_page_script : $this->rule->get_next_page_script);
+                        $formData['get_next_page_script'] = ($this->pullDriver ? $this->pullDriver->get_next_page_script : '');
 
                         $uiItems->add($driver);
                         ?>
@@ -270,7 +284,7 @@
                         ]);
                         echo $driver->getHtml();
 
-                        $formData['get_links_script'] = ($this->task ? $this->task->get_links_script : $this->rule->get_links_script);
+                        $formData['get_links_script'] = ($this->pullDriver ? $this->pullDriver->get_links_script : '');
 
                         $uiItems->add($driver);
                         ?>
@@ -289,7 +303,7 @@
 
                         <div class="be-row">
                             <div class="be-col-auto">
-                                <table class="monkey-rule-form-table be-mt-100">
+                                <table class="monkey-pull-driver-form-table be-mt-100">
                                     <tr v-for="(field, fieldIndex) in formData.fields">
                                         <td>
                                             <el-link type="primary" @click="editField(field)">{{field.name}}</el-link>
@@ -365,18 +379,10 @@
                             </div>
                         </div>
                         <?php
-                        if ($this->task) {
-                            $formData['fields'] = $this->task->fields;
+                        if ($this->pullDriver) {
+                            $formData['fields'] = $this->pullDriver->fields;
                         } else {
-                            $fields = [];
-                            foreach ($this->rule->fields as $field) {
-                                $fields[] = (object)[
-                                        'id' => '',
-                                        'name' => $field->name,
-                                        'script' => $field->script,
-                                ];
-                            }
-                            $formData['fields'] = $fields;
+                            $formData['fields'] = [];
                         }
                         ?>
 
@@ -465,7 +471,7 @@
                         if (valid) {
                             _this.loading = true;
                             vueNorth.loading = true;
-                            _this.$http.post("<?php echo beAdminUrl('Monkey.Task.' . ($this->task ? 'edit' : 'create'), ['role_id' => $this->rule->id]); ?>", {
+                            _this.$http.post("<?php echo beAdminUrl('Monkey.PullDriver.' . ($this->pullDriver ? 'edit' : 'create')); ?>", {
                                 formData: _this.formData
                             }).then(function (response) {
                                 _this.loading = false;
@@ -480,7 +486,7 @@
                                         } else {
                                             setTimeout(function () {
                                                 window.onbeforeunload = null;
-                                                window.location.href = "<?php echo beAdminUrl('Monkey.Task.tasks'); ?>";
+                                                window.location.href = "<?php echo beAdminUrl('Monkey.PullDriver.pullDrivers'); ?>";
                                             }, 1000);
                                         }
                                     } else {
@@ -503,7 +509,7 @@
                 },
                 cancel: function () {
                     window.onbeforeunload = null;
-                    window.location.href = "<?php echo beAdminUrl('Monkey.Task.tasks'); ?>";
+                    window.location.href = "<?php echo beAdminUrl('Monkey.PullDriver.pullDrivers'); ?>";
                 },
 
                 <?php
