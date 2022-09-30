@@ -41,19 +41,15 @@ class Content extends Auth
                 'form' => [
                     'items' => [
                         [
-                            'name' => 'is_enable',
-                            'label' => '启用状态',
-                            'driver' => FormItemSelect::class,
-                            'keyValues' => [
-                                '1' => '启用',
-                                '0' => '禁用',
-                            ],
+                            'name' => 'title',
+                            'label' => '标题',
                         ],
                         [
-                            'name' => 'task_id',
-                            'label' => '采集器',
+                            'name' => 'pull_task_id',
+                            'label' => '采集任务',
                             'driver' => FormItemSelect::class,
                             'keyValues' => $pullTaskKeyValues,
+                            'value' => Be::getRequest()->get('pull_task_id'),
                         ],
                     ],
                 ],

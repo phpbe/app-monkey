@@ -21,6 +21,18 @@ class PullTask
     }
 
     /**
+     * 获取可用的采集任务列表
+     *
+     * @return array
+     */
+    public function getEnabledPullTasks(): array
+    {
+        $sql = 'SELECT * FROM monkey_pull_task WHERE is_enable = 1 AND is_delete = 0 ORDER BY `ordering` DESC';
+        $pullTasks = Be::getDb()->getObjects($sql);
+        return $pullTasks;
+    }
+
+    /**
      * 获取采集任务
      *
      * @param string $pullTaskId
@@ -61,6 +73,16 @@ class PullTask
         return Be::getDb()->getKeyValues($sql);
     }
 
+    /**
+     * 获取可用的采集任务键值对
+     *
+     * @return array
+     */
+    public function getEnabledPullTaskKeyValues(): array
+    {
+        $sql = 'SELECT id, `name` FROM monkey_pull_task WHERE is_enable = 1 AND is_delete = 0 ORDER BY `ordering` DESC';
+        return Be::getDb()->getKeyValues($sql);
+    }
 
     /**
      * 编辑采集任务

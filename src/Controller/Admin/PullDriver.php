@@ -9,7 +9,6 @@ use Be\AdminPlugin\Table\Item\TableItemLink;
 use Be\AdminPlugin\Form\Item\FormItemSelect;
 use Be\AdminPlugin\Table\Item\TableItemSelection;
 use Be\AdminPlugin\Table\Item\TableItemSwitch;
-use Be\AdminPlugin\Toolbar\Item\ToolbarItemLink;
 use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
 
@@ -305,6 +304,15 @@ class PullDriver extends Auth
                             'label' => '排序',
                         ],
                         [
+                            'name' => 'fields',
+                            'label' => '采集字段',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'json',
+                            'value' => function($row) {
+                                return json_encode(unserialize($row['fields']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                            }
+                        ],
+                        [
                             'name' => 'is_enable',
                             'label' => '启用/禁用',
                             'driver' => DetailItemToggleIcon::class,
@@ -409,7 +417,7 @@ class PullDriver extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.PullTask.tasks', ['pull_driver_id' => $postData['row']['id']]));
+                $response->redirect(beAdminUrl('Monkey.PullTask.pullTasks', ['pull_driver_id' => $postData['row']['id']]));
             }
         }
     }

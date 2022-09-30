@@ -24,7 +24,7 @@ class PullTask extends Auth
     /**
      * 采集器
      *
-     * @BeMenu("采集任务", icon="el-icon-video-play", ordering="1.2")
+     * @BeMenu("采集任务", icon="bi-arrow-down-square", ordering="1.2")
      * @BePermission("采集任务", ordering="1.2")
      */
     public function pullTasks()
@@ -50,6 +50,10 @@ class PullTask extends Auth
                 'form' => [
                     'items' => [
                         [
+                            'name' => 'name',
+                            'label' => '名称',
+                        ],
+                        [
                             'name' => 'is_enable',
                             'label' => '启用状态',
                             'driver' => FormItemSelect::class,
@@ -63,6 +67,7 @@ class PullTask extends Auth
                             'label' => '采集器',
                             'driver' => FormItemSelect::class,
                             'keyValues' => $pullDriverKeyValues,
+                            'value' => Be::getRequest()->get('pull_driver_id'),
                         ],
                     ],
                 ],
@@ -231,12 +236,12 @@ class PullTask extends Auth
                                 'action' => 'run',
                                 'target' => 'blank',
                                 'ui' => [
-                                    'type' => 'danger',
+                                    'type' => 'warning',
                                     ':underline' => 'false',
                                     'style' => 'font-size: 20px;',
                                     ':disabled' => 'scope.row.is_enable !== \'1\'',
                                 ],
-                                'icon' => 'el-icon-video-play',
+                                'icon' => 'bi-caret-right-square',
                             ],
                             [
                                 'label' => '',
@@ -294,10 +299,6 @@ class PullTask extends Auth
                             'label' => '版本号',
                         ],
                         [
-                            'name' => 'author',
-                            'label' => '作者',
-                        ],
-                        [
                             'name' => 'match_1',
                             'label' => '匹配网址1',
                         ],
@@ -314,14 +315,14 @@ class PullTask extends Auth
                             'label' => '起始页',
                         ],
                         [
-                            'name' => '获取下一页脚本',
-                            'label' => 'get_next_page_script',
+                            'name' => 'get_next_page_script',
+                            'label' => '获取下一页脚本',
                             'driver' => DetailItemCode::class,
                             'language' => 'javascript',
                         ],
                         [
-                            'name' => '获取页面链接脚本',
-                            'label' => 'get_links_script',
+                            'name' => 'get_links_script',
+                            'label' => '获取页面链接脚本',
                             'driver' => DetailItemCode::class,
                             'language' => 'javascript',
                         ],
@@ -332,6 +333,15 @@ class PullTask extends Auth
                         [
                             'name' => 'ordering',
                             'label' => '排序',
+                        ],
+                        [
+                            'name' => 'fields',
+                            'label' => '采集字段',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'json',
+                            'value' => function($row) {
+                                return json_encode(unserialize($row['fields']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                            }
                         ],
                         [
                             'name' => 'is_enable',
@@ -378,7 +388,7 @@ class PullTask extends Auth
             }
         } else {
             if ($pullDriverId === '') {
-                $pullDrivers = Be::getService('App.Monkey.Admin.PullDriver')->getPullDrivers();
+                $pullDrivers = Be::getService('App.Monkey.Admin.PullDriver')->getEnabledPullDrivers();
                 $response->set('pullDrivers', $pullDrivers);
 
                 $response->set('title', '新建采集任务');

@@ -21,6 +21,18 @@ class PullDriver
     }
 
     /**
+     * 获取可用的采集器列表
+     *
+     * @return array
+     */
+    public function getEnabledPullDrivers(): array
+    {
+        $sql = 'SELECT * FROM monkey_pull_driver WHERE is_enable = 1 AND is_delete = 0 ORDER BY `ordering` DESC';
+        $pullDrivers = Be::getDb()->getObjects($sql);
+        return $pullDrivers;
+    }
+
+    /**
      * 获取采集器
      *
      * @param string $pullDriverId
@@ -61,6 +73,16 @@ class PullDriver
         return Be::getDb()->getKeyValues($sql);
     }
 
+    /**
+     * 获取可用的采集器键值对
+     *
+     * @return array
+     */
+    public function getEnabledPullDriverKeyValues(): array
+    {
+        $sql = 'SELECT id, `name` FROM monkey_pull_driver WHERE is_enable = 1 AND is_delete = 0 ORDER BY `ordering` DESC';
+        return Be::getDb()->getKeyValues($sql);
+    }
 
     /**
      * 编辑采集器

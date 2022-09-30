@@ -402,7 +402,7 @@
                             </div>
 
                             <div class="be-col-auto">
-                                <div class="be-pl-400"></div>
+                                <div class="be-pl-200"></div>
                             </div>
 
                             <div class="be-col">

@@ -17,24 +17,24 @@ use Be\Be;
  * @BeMenuGroup("发布")
  * @BePermissionGroup("发布")
  */
-class PushDriver extends Auth
+class PushTask extends Auth
 {
 
     /**
      * 发布器
      *
-     * @BeMenu("发布器", icon="bi-cloud-upload", ordering="3.2")
-     * @BePermission("发布器", ordering="3.2")
+     * @BeMenu("发布任务", icon="bi-arrow-up-square", ordering="3.3")
+     * @BePermission("发布任务", ordering="3.3")
      */
-    public function pushDrivers()
+    public function pushTasks()
     {
         Be::getAdminPlugin('Curd')->setting([
 
-            'label' => '发布器',
-            'table' => 'monkey_push_driver',
+            'label' => '发布任务',
+            'table' => 'monkey_push_task',
 
             'grid' => [
-                'title' => '发布器',
+                'title' => '发布任务',
 
                 'filter' => [
                     ['is_delete', '=', '0'],
@@ -165,15 +165,29 @@ class PushDriver extends Auth
                         'items' => [
                             [
                                 'label' => '',
-                                'tooltip' => '创建发布器',
-                                'action' => 'createPushTask',
+                                'tooltip' => '安装',
+                                'action' => 'edit',
                                 'target' => 'self',
                                 'ui' => [
                                     'type' => 'success',
                                     ':underline' => 'false',
                                     'style' => 'font-size: 20px;',
+                                    ':disabled' => 'scope.row.is_enable !== \'1\'',
                                 ],
                                 'icon' => 'el-icon-plus',
+                            ],
+                            [
+                                'label' => '',
+                                'tooltip' => '启动',
+                                'action' => 'run',
+                                'target' => 'blank',
+                                'ui' => [
+                                    'type' => 'warning',
+                                    ':underline' => 'false',
+                                    'style' => 'font-size: 20px;',
+                                    ':disabled' => 'scope.row.is_enable !== \'1\'',
+                                ],
+                                'icon' => 'bi-caret-right-square',
                             ],
                             [
                                 'label' => '',
@@ -189,7 +203,6 @@ class PushDriver extends Auth
                             [
                                 'label' => '',
                                 'tooltip' => '删除',
-                                'task' => 'fieldEdit',
                                 'postData' => [
                                     'field' => 'is_delete',
                                     'value' => '1',
@@ -209,7 +222,7 @@ class PushDriver extends Auth
             ],
 
             'detail' => [
-                'title' => '发布器详情',
+                'title' => '采集任务采集任务详情',
                 'theme' => 'Blank',
                 'form' => [
                     'items' => [
@@ -222,30 +235,53 @@ class PushDriver extends Auth
                             'label' => '名称',
                         ],
                         [
+                            'name' => 'description',
+                            'label' => '描述',
+                            'driver' => DetailItemHtml::class,
+                        ],
+                        [
+                            'name' => 'version',
+                            'label' => '版本号',
+                        ],
+                        [
+                            'name' => 'author',
+                            'label' => '作者',
+                        ],
+                        [
+                            'name' => 'match_1',
+                            'label' => '匹配网址1',
+                        ],
+                        [
+                            'name' => 'match_2',
+                            'label' => '匹配网址2',
+                        ],
+                        [
+                            'name' => 'match_3',
+                            'label' => '匹配网址3',
+                        ],
+                        [
+                            'name' => 'start_page',
+                            'label' => '起始页',
+                        ],
+                        [
+                            'name' => '获取下一页脚本',
+                            'label' => 'get_next_page_script',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'javascript',
+                        ],
+                        [
+                            'name' => '获取页面链接脚本',
+                            'label' => 'get_links_script',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'javascript',
+                        ],
+                        [
                             'name' => 'interval',
                             'label' => '间隔时间（毫秒）',
                         ],
                         [
                             'name' => 'ordering',
                             'label' => '排序',
-                        ],
-                        [
-                            'name' => 'fields',
-                            'label' => '字段',
-                            'driver' => DetailItemCode::class,
-                            'language' => 'json',
-                            'value' => function($row) {
-                                return json_encode(unserialize($row['fields']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                            }
-                        ],
-                        [
-                            'name' => 'options',
-                            'label' => '配置项',
-                            'driver' => DetailItemCode::class,
-                            'language' => 'json',
-                            'value' => function($row) {
-                                return json_encode(unserialize($row['options']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                            }
                         ],
                         [
                             'name' => 'is_enable',
@@ -265,115 +301,6 @@ class PushDriver extends Auth
             ],
 
         ])->execute();
-    }
-
-    /**
-     * 新建发布器
-     *
-     * @BePermission("新建", ordering="1.21")
-     */
-    public function create()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        if ($request->isAjax()) {
-            try {
-                Be::getService('App.Monkey.Admin.PushDriver')->edit($request->json('formData'));
-                $response->set('success', true);
-                $response->set('message', '新建发布器成功！');
-                $response->json();
-            } catch (\Throwable $t) {
-                $response->set('success', false);
-                $response->set('message', $t->getMessage());
-                $response->json();
-            }
-        } else {
-            $response->set('pushDriver', false);
-
-            $response->set('title', '新建发布器');
-
-            //$response->display();
-            $response->display('App.Monkey.Admin.PushDriver.edit');
-        }
-    }
-
-    /**
-     * 编辑
-     *
-     * @BePermission("编辑", ordering="1.22")
-     */
-    public function edit()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        if ($request->isAjax()) {
-            try {
-                Be::getService('App.Monkey.Admin.PushDriver')->edit($request->json('formData'));
-                $response->set('success', true);
-                $response->set('message', '编辑发布器成功！');
-                $response->json();
-            } catch (\Throwable $t) {
-                $response->set('success', false);
-                $response->set('message', $t->getMessage());
-                $response->json();
-            }
-        } elseif ($request->isPost()) {
-            $postData = $request->post('data', '', '');
-            if ($postData) {
-                $postData = json_decode($postData, true);
-                if (isset($postData['row']['id']) && $postData['row']['id']) {
-                    $response->redirect(beAdminUrl('Monkey.PushDriver.edit', ['id' => $postData['row']['id']]));
-                }
-            }
-        } else {
-            $pushDriverId = $request->get('id', '');
-            $pushDriver = Be::getService('App.Monkey.Admin.PushDriver')->getPushDriver($pushDriverId);
-            $response->set('pushDriver', $pushDriver);
-
-            $response->set('title', '编辑发布器');
-
-            $response->display();
-        }
-    }
-
-    /**
-     * 查看发布任务
-     *
-     * @BePermission("*")
-     */
-    public function showPushTasks()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        $postData = $request->post('data', '', '');
-        if ($postData) {
-            $postData = json_decode($postData, true);
-            if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.PushTask.pushTasks', ['push_driver_id' => $postData['row']['id']]));
-            }
-        }
-    }
-
-    /**
-     * 创建发布任务
-     *
-     * @BePermission("*")
-     */
-    public function createPushTask()
-    {
-        $request = Be::getRequest();
-        $response = Be::getResponse();
-
-        $postData = $request->post('data', '', '');
-        if ($postData) {
-            $postData = json_decode($postData, true);
-            if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.PushTask.create', ['push_driver_id' => $postData['row']['id']]));
-            }
-        }
     }
 
 }

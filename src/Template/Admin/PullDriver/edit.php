@@ -416,7 +416,7 @@
                             </div>
 
                             <div class="be-col-auto">
-                                <div class="be-pl-400"></div>
+                                <div class="be-pl-200"></div>
                             </div>
 
                             <div class="be-col">
@@ -531,7 +531,6 @@
                         this.field.script = this.formData.field_script;
                     } else {
                         this.formData.fields.push({
-                            id : "",
                             name: this.formData.field_name,
                             script: this.formData.field_script,
                             is_title: 0,

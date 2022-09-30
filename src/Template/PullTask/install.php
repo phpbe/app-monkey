@@ -190,7 +190,7 @@ BeMonkey = {
             }
 
             sHtml += '<div style="padding-top: 10px; display: flex;">';
-            sHtml += '<div style="flex: 0 0 auto;">分页进茺：</div>';
+            sHtml += '<div style="flex: 0 0 auto;">分页进度：</div>';
             sHtml += '<div style="flex: 1"><div style="margin-top: 5px; height: 10px; background-color: #eee"><div style="height: 10px; background-color: green; width: ' + percent + '%;"></div></div></div>';
             sHtml += '<div style="flex: 0 0 auto; padding-left: 10px;">' + (this.totalPageLinks - this.links.length) + '/'  + this.totalPageLinks + '</div>';
             sHtml += "</div>";
