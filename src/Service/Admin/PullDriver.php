@@ -101,15 +101,15 @@ class PullDriver
             $pullDriverId = $data['id'];
         }
 
-        $tupleRule = Be::getTuple('monkey_pull_driver');
+        $tuplePullDriver = Be::getTuple('monkey_pull_driver');
         if (!$isNew) {
             try {
-                $tupleRule->load($pullDriverId);
+                $tuplePullDriver->load($pullDriverId);
             } catch (\Throwable $t) {
                 throw new ServiceException('采集器（# ' . $pullDriverId . '）不存在！');
             }
 
-            if ($tupleRule->is_delete === 1) {
+            if ($tuplePullDriver->is_delete === 1) {
                 throw new ServiceException('采集器（# ' . $pullDriverId . '）不存在！');
             }
         }
@@ -231,26 +231,26 @@ class PullDriver
         $db->startTransaction();
         try {
             $now = date('Y-m-d H:i:s');
-            $tupleRule->name = $data['name'];
-            $tupleRule->description = $data['description'];
-            $tupleRule->match_1 = $data['match_1'];
-            $tupleRule->match_2 = $data['match_2'];
-            $tupleRule->match_3 = $data['match_3'];
-            $tupleRule->start_page = $data['start_page'];
-            $tupleRule->get_next_page_script = $data['get_next_page_script'];
-            $tupleRule->get_links_script = $data['get_links_script'];
-            $tupleRule->interval = $data['interval'];
-            $tupleRule->version = $data['version'];
-            $tupleRule->ordering = $data['ordering'];
-            $tupleRule->fields = serialize($data['fields']);
-            $tupleRule->is_enable = $data['is_enable'];
-            $tupleRule->update_time = $now;
+            $tuplePullDriver->name = $data['name'];
+            $tuplePullDriver->description = $data['description'];
+            $tuplePullDriver->match_1 = $data['match_1'];
+            $tuplePullDriver->match_2 = $data['match_2'];
+            $tuplePullDriver->match_3 = $data['match_3'];
+            $tuplePullDriver->start_page = $data['start_page'];
+            $tuplePullDriver->get_next_page_script = $data['get_next_page_script'];
+            $tuplePullDriver->get_links_script = $data['get_links_script'];
+            $tuplePullDriver->interval = $data['interval'];
+            $tuplePullDriver->version = $data['version'];
+            $tuplePullDriver->ordering = $data['ordering'];
+            $tuplePullDriver->fields = serialize($data['fields']);
+            $tuplePullDriver->is_enable = $data['is_enable'];
+            $tuplePullDriver->update_time = $now;
             if ($isNew) {
-                $tupleRule->is_delete = 0;
-                $tupleRule->create_time = $now;
-                $tupleRule->insert();
+                $tuplePullDriver->is_delete = 0;
+                $tuplePullDriver->create_time = $now;
+                $tuplePullDriver->insert();
             } else {
-                $tupleRule->update();
+                $tuplePullDriver->update();
             }
 
             $db->commit();
@@ -262,7 +262,7 @@ class PullDriver
             throw new ServiceException(($isNew ? '新建' : '编辑') . '采集器发生异常！');
         }
 
-        return $tupleRule->toObject();
+        return $tuplePullDriver->toObject();
     }
 
 

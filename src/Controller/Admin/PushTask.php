@@ -142,6 +142,28 @@ class PushTask extends Auth
                             ],
                         ],
                         [
+                            'name' => 'status_desc',
+                            'label' => '状态',
+                            'align' => 'center',
+                            'width' => '120',
+                            'value' =>  function ($row) {
+                                switch ($row['status']) {
+                                    case 'created':
+                                        return '新建';
+                                    case 'prepared':
+                                        return '即将运行';
+                                    case 'running':
+                                        return '运行中';
+                                    case 'completed':
+                                        return '执行完成';
+                                    case 'error':
+                                        return '执行出错';
+                                    default:
+                                        return '-';
+                                }
+                            },
+                        ],
+                        [
                             'name' => 'ordering',
                             'label' => '排序',
                             'width' => '80',
@@ -165,27 +187,15 @@ class PushTask extends Auth
                         'items' => [
                             [
                                 'label' => '',
-                                'tooltip' => '安装',
-                                'action' => 'edit',
-                                'target' => 'self',
-                                'ui' => [
-                                    'type' => 'success',
-                                    ':underline' => 'false',
-                                    'style' => 'font-size: 20px;',
-                                    ':disabled' => 'scope.row.is_enable !== \'1\'',
-                                ],
-                                'icon' => 'el-icon-plus',
-                            ],
-                            [
-                                'label' => '',
                                 'tooltip' => '启动',
                                 'action' => 'run',
-                                'target' => 'blank',
+                                'target' => 'ajax',
+                                'confirm' => '确认要启动么？',
                                 'ui' => [
                                     'type' => 'warning',
                                     ':underline' => 'false',
                                     'style' => 'font-size: 20px;',
-                                    ':disabled' => 'scope.row.is_enable !== \'1\'',
+                                    ':disabled' => 'scope.row.is_enable !== \'1\' || scope.row.status === \'prepared\' || scope.row.status === \'running\'',
                                 ],
                                 'icon' => 'bi-caret-right-square',
                             ],
@@ -222,7 +232,7 @@ class PushTask extends Auth
             ],
 
             'detail' => [
-                'title' => '采集任务采集任务详情',
+                'title' => '发布任务发布任务详情',
                 'theme' => 'Blank',
                 'form' => [
                     'items' => [
@@ -235,45 +245,26 @@ class PushTask extends Auth
                             'label' => '名称',
                         ],
                         [
-                            'name' => 'description',
-                            'label' => '描述',
-                            'driver' => DetailItemHtml::class,
+                            'name' => 'url',
+                            'label' => '发布网址',
                         ],
                         [
-                            'name' => 'version',
-                            'label' => '版本号',
-                        ],
-                        [
-                            'name' => 'author',
-                            'label' => '作者',
-                        ],
-                        [
-                            'name' => 'match_1',
-                            'label' => '匹配网址1',
-                        ],
-                        [
-                            'name' => 'match_2',
-                            'label' => '匹配网址2',
-                        ],
-                        [
-                            'name' => 'match_3',
-                            'label' => '匹配网址3',
-                        ],
-                        [
-                            'name' => 'start_page',
-                            'label' => '起始页',
-                        ],
-                        [
-                            'name' => '获取下一页脚本',
-                            'label' => 'get_next_page_script',
+                            'name' => 'headers',
+                            'label' => '请求头',
                             'driver' => DetailItemCode::class,
-                            'language' => 'javascript',
+                            'language' => 'json',
+                            'value' => function($row) {
+                                return json_encode(unserialize($row['headers']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                            }
                         ],
                         [
-                            'name' => '获取页面链接脚本',
-                            'label' => 'get_links_script',
+                            'name' => 'fields',
+                            'label' => '字段',
                             'driver' => DetailItemCode::class,
-                            'language' => 'javascript',
+                            'language' => 'json',
+                            'value' => function($row) {
+                                return json_encode(unserialize($row['fields']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                            }
                         ],
                         [
                             'name' => 'interval',
@@ -282,6 +273,34 @@ class PushTask extends Auth
                         [
                             'name' => 'ordering',
                             'label' => '排序',
+                        ],
+                        [
+                            'name' => 'status',
+                            'label' => '状态',
+                        ],
+                        [
+                            'name' => 'status_desc',
+                            'label' => '状态描述',
+                            'value' => function($row) {
+                                switch ($row['status']) {
+                                    case 'created':
+                                        return '新建';
+                                    case 'prepared':
+                                        return '即将运行';
+                                    case 'running':
+                                        return '运行中';
+                                    case 'completed':
+                                        return '执行完成';
+                                    case 'error':
+                                        return '执行出错';
+                                    default:
+                                        return '-';
+                                }
+                            }
+                        ],
+                        [
+                            'name' => 'message',
+                            'label' => '消息',
                         ],
                         [
                             'name' => 'is_enable',
@@ -301,6 +320,127 @@ class PushTask extends Auth
             ],
 
         ])->execute();
+    }
+
+    /**
+     * 发布任务 - 新建
+     *
+     * @BePermission("发布任务 - 新建", ordering="3.31")
+     */
+    public function create()
+    {
+        $request = Be::getRequest();
+        $response = Be::getResponse();
+
+        $pushDriverId = $request->get('push_driver_id', '');
+        $pullTaskId = $request->get('pull_task_id', '');
+
+        if ($request->isAjax()) {
+            try {
+                Be::getService('App.Monkey.Admin.PushTask')->edit($request->json('formData'));
+                $response->set('success', true);
+                $response->set('message', '新建发布任务成功！');
+                $response->json();
+            } catch (\Throwable $t) {
+                $response->set('success', false);
+                $response->set('message', $t->getMessage());
+                $response->json();
+            }
+        } else {
+            if ($pushDriverId === '' || $pullTaskId === '') {
+                $pushDrivers = Be::getService('App.Monkey.Admin.PushDriver')->getEnabledPushDrivers();
+                $response->set('pushDrivers', $pushDrivers);
+                $response->set('pushDriverId', $pushDriverId);
+
+                $pullTasks = Be::getService('App.Monkey.Admin.PullTask')->getEnabledPullTasks();
+                $serviceContent = Be::getService('App.Monkey.Admin.Content');
+                foreach ($pullTasks as $pullTask) {
+                    $pullTask->content_count = $serviceContent->getPullTaskContentCount($pullTask->id);
+                }
+                $response->set('pullTasks', $pullTasks);
+                $response->set('pullTaskId', $pullTaskId);
+
+                $response->set('title', '新建发布任务');
+                $response->display();
+            } else {
+                $pushDriver = Be::getService('App.Monkey.Admin.PushDriver')->getPushDriver($pushDriverId);
+                $response->set('pushDriver', $pushDriver);
+                $response->set('pushDriverId', $pushDriverId);
+
+                $pullTask = Be::getService('App.Monkey.Admin.PullTask')->getPullTask($pullTaskId);
+                $response->set('pullTask', $pullTask);
+                $response->set('pullTaskId', $pullTaskId);
+
+                $response->set('pushTask', false);
+
+                $response->set('title', '新建发布任务');
+                $response->display('App.Monkey.Admin.PushTask.edit');
+            }
+        }
+    }
+
+    /**
+     * 发布任务 - 编辑
+     *
+     * @BePermission("发布任务 - 编辑", ordering="3.32")
+     */
+    public function edit()
+    {
+        $request = Be::getRequest();
+        $response = Be::getResponse();
+
+        if ($request->isAjax()) {
+            try {
+                Be::getService('App.Monkey.Admin.PushTask')->edit($request->json('formData'));
+                $response->set('success', true);
+                $response->set('message', '编辑发布任务成功！');
+                $response->json();
+            } catch (\Throwable $t) {
+                $response->set('success', false);
+                $response->set('message', $t->getMessage());
+                $response->json();
+            }
+        } elseif ($request->isPost()) {
+            $postData = $request->post('data', '', '');
+            if ($postData) {
+                $postData = json_decode($postData, true);
+                if (isset($postData['row']['id']) && $postData['row']['id']) {
+                    $response->redirect(beAdminUrl('Monkey.PushTask.edit', ['id' => $postData['row']['id']]));
+                }
+            }
+        } else {
+            $pushTaskId = $request->get('id', '');
+            $pushTask = Be::getService('App.Monkey.Admin.PushTask')->getPushTask($pushTaskId);
+            $response->set('pushTask', $pushTask);
+
+            $pushDriver = Be::getService('App.Monkey.Admin.PushDriver')->getPushDriver($pushTask->push_driver_id);
+            $response->set('pushDriver', $pushDriver);
+
+            $pullTask = Be::getService('App.Monkey.Admin.PullTask')->getPullTask($pushTask->pull_task_id);
+            $response->set('pullTask', $pullTask);
+
+            $response->set('title', '编辑发布任务');
+
+            $response->display();
+        }
+    }
+
+
+    /**
+     * 发布任务 - 启动
+     *
+     * @BePermission("发布任务 - 启动", ordering="3.33")
+     */
+    public function run()
+    {
+        $request = Be::getRequest();
+        $response = Be::getResponse();
+
+        $pushTaskId = $request->json('row.id');
+        if ($pushTaskId) {
+            Be::getService('App.Monkey.Admin.PushTask')->run($pushTaskId);
+            $response->success('发布任务已启动');
+        }
     }
 
 }

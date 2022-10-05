@@ -192,7 +192,7 @@
                                     <el-form-item prop="is_enable">
                                         <el-switch v-model.number="formData.is_enable" :active-value="1" :inactive-value="0"></el-switch>
                                     </el-form-item>
-                                    <?php $formData['is_enable'] = ($this->pullTask ? $this->pullTask->is_enable : 0); ?>
+                                    <?php $formData['is_enable'] = ($this->pullTask ? $this->pullTask->is_enable : 1); ?>
                                 </td>
                             </tr>
                             <tr>
@@ -398,7 +398,7 @@
                                     </transition-group>
                                 </draggable>
 
-                                <el-button class="be-mt-100" stze="small" type="primary" @click="addField">新增字段</el-button>
+                                <el-button class="be-mt-100" size="small" type="primary" @click="addField">新增字段</el-button>
                             </div>
 
                             <div class="be-col-auto">
@@ -445,8 +445,8 @@
                                     ?>
 
                                     <div class="be-mt-150 be-ta-right">
-                                        <el-button stze="small" type="primary" :disabled="formData.field_name===''" @click="saveField">确定</el-button>
-                                        <el-button stze="small" type="danger" @click="fieldForm = false;">取消</el-button>
+                                        <el-button size="small" type="primary" :disabled="formData.field_name===''" @click="saveField">确定</el-button>
+                                        <el-button size="small" type="danger" @click="fieldForm = false;">取消</el-button>
                                     </div>
 
                                 </div>

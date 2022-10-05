@@ -222,12 +222,17 @@ class PushDriver extends Auth
                             'label' => '名称',
                         ],
                         [
-                            'name' => 'interval',
-                            'label' => '间隔时间（毫秒）',
+                            'name' => 'url',
+                            'label' => '发布网址',
                         ],
                         [
-                            'name' => 'ordering',
-                            'label' => '排序',
+                            'name' => 'headers',
+                            'label' => '请求头',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'json',
+                            'value' => function($row) {
+                                return json_encode(unserialize($row['headers']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                            }
                         ],
                         [
                             'name' => 'fields',
@@ -239,13 +244,12 @@ class PushDriver extends Auth
                             }
                         ],
                         [
-                            'name' => 'options',
-                            'label' => '配置项',
-                            'driver' => DetailItemCode::class,
-                            'language' => 'json',
-                            'value' => function($row) {
-                                return json_encode(unserialize($row['options']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                            }
+                            'name' => 'interval',
+                            'label' => '间隔时间（毫秒）',
+                        ],
+                        [
+                            'name' => 'ordering',
+                            'label' => '排序',
                         ],
                         [
                             'name' => 'is_enable',

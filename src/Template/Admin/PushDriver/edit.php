@@ -14,14 +14,6 @@
             line-height: inherit;
         }
 
-        .el-tooltip {
-            cursor: pointer;
-        }
-
-        .el-tooltip:hover {
-            color: #409EFF;
-        }
-
         .monkey-push-driver-form-table {
             width: 100%;
             border: none;
@@ -66,12 +58,12 @@
         }
 
         .field-item-name {
-            width: 90px;
+            width: 120px;
             overflow: hidden;
         }
 
         .field-item-label{
-            width: 90px;
+            width: 120px;
             overflow: hidden;
         }
 
@@ -156,8 +148,132 @@
                             </div>
                         </div>
 
-                        <div class="be-mt-100"><span class="be-c-red">*</span> 发布字段：</div>
 
+                        <div class="be-row be-mt-100">
+                            <div class="be-col-auto be-lh-250">发布网址：</div>
+                            <div class="be-col">
+                                <el-form-item prop="url">
+                                    <el-input
+                                            type="text"
+                                            placeholder="请输入发布网址"
+                                            v-model="formData.url"
+                                            maxlength="300"
+                                            show-word-limit>
+                                    </el-input>
+                                </el-form-item>
+                                <?php $formData['url'] = ($this->pushDriver ? $this->pushDriver->url : ''); ?>
+                            </div>
+                        </div>
+
+                        <div class="be-mt-200 be-pb-50 be-bb-eee">请求头：</div>
+                        <div class="be-row be-mt-100">
+                            <div class="be-col-24 be-xxl-col-auto">
+                                <div class="be-row field-item-header">
+                                    <div class="be-col-auto">
+                                        <div class="field-item-drag-icon">
+                                        </div>
+                                    </div>
+                                    <div class="be-col-auto">
+                                        <div class="field-item-name">
+                                            名称
+                                        </div>
+                                    </div>
+                                    <div class="be-col-auto">
+                                        <div class="field-item-op">
+                                            操作
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <draggable
+                                        v-model="formData.headers"
+                                        ghost-class="field-item-ghost"
+                                        chosen-class="field-item-chosen"
+                                        drag-class="field-item-drag"
+                                        handle=".field-item-drag-icon"
+                                        force-fallback="true"
+                                        animation="100">
+                                    <transition-group>
+                                        <div class="be-row field-item" v-for="header, headerIndex in formData.headers" :key="header.name">
+                                            <div class="be-col-auto">
+                                                <div class="field-item-drag-icon">
+                                                    <i class="el-icon-rank"></i>
+                                                </div>
+                                            </div>
+                                            <div class="be-col-auto">
+                                                <div class="field-item-name">
+                                                    <el-link type="primary" @click="editHeader(header)">{{header.name}}</el-link>
+                                                </div>
+                                            </div>
+                                            <div class="be-col-auto">
+                                                <div class="field-item-op">
+                                                    <el-link type="danger" icon="el-icon-delete" @click="deleteHeader(header)"></el-link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </transition-group>
+                                </draggable>
+
+                                <el-button class="be-mt-100" size="small" type="primary" @click="addHeader">新增请求头</el-button>
+                            </div>
+
+                            <div class="be-col-24 be-xxl-col-auto">
+                                <div class="be-pl-200 be-pt-200"></div>
+                            </div>
+
+                            <div class="be-col-24 be-xxl-col">
+                                <div v-show="headerForm">
+
+                                    <div class="be-row">
+                                        <div class="be-col-auto be-lh-250">名称：</div>
+                                        <div class="be-col">
+                                            <el-input
+                                                    type="text"
+                                                    placeholder="请输入名称"
+                                                    v-model = "formData.header_name"
+                                                    size="medium"
+                                                    maxlength="60"
+                                                    show-word-limit>
+                                            </el-input>
+                                            <?php
+                                            $formData['header_name'] = '';
+                                            ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="be-row be-mt-100">
+                                        <div class="be-col-auto be-lh-250">值：</div>
+                                        <div class="be-col">
+                                            <el-input
+                                                    type="text"
+                                                    placeholder="请输入值"
+                                                    v-model = "formData.header_value"
+                                                    size="medium">
+                                            </el-input>
+                                            <?php
+                                            $formData['header_value'] = '';
+                                            ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="be-mt-150 be-ta-right">
+                                        <el-button size="small" type="primary" :disabled="formData.header_name==='' || formData.header_value===''" @click="saveHeader">确定</el-button>
+                                        <el-button size="small" type="danger" @click="headerForm = false;">取消</el-button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <?php
+                        if ($this->pushDriver) {
+                            $formData['headers'] = $this->pushDriver->headers;
+                        } else {
+                            $formData['headers'] = [];
+                        }
+                        ?>
+
+
+                        <div class="be-mt-200 be-pb-50 be-bb-eee"><span class="be-c-red">*</span> 发布字段：</div>
                         <div class="be-row be-mt-100">
                             <div class="be-col-24 be-xxl-col-auto">
                                 <div class="be-row field-item-header">
@@ -216,7 +332,7 @@
                                     </transition-group>
                                 </draggable>
 
-                                <el-button class="be-mt-100" stze="small" type="primary" @click="addField">新增字段</el-button>
+                                <el-button class="be-mt-100" size="small" type="primary" @click="addField">新增字段</el-button>
                             </div>
 
                             <div class="be-col-24 be-xxl-col-auto">
@@ -275,9 +391,19 @@
                                         </div>
                                     </div>
 
+                                    <div class="be-row be-mt-100">
+                                        <div class="be-col-auto be-lh-250">是否必填：</div>
+                                        <div class="be-col be-lh-250">
+                                            <el-switch v-model.number="formData.field_required" :active-value="1" :inactive-value="0" size="medium"></el-switch>
+                                            <?php
+                                            $formData['field_required'] = 0;
+                                            ?>
+                                        </div>
+                                    </div>
+
                                     <div class="be-mt-150 be-ta-right">
-                                        <el-button stze="small" type="primary" :disabled="formData.field_name==='' || formData.field_label===''" @click="saveField">确定</el-button>
-                                        <el-button stze="small" type="danger" @click="fieldForm = false;">取消</el-button>
+                                        <el-button size="small" type="primary" :disabled="formData.field_name==='' || formData.field_label===''" @click="saveField">确定</el-button>
+                                        <el-button size="small" type="danger" @click="fieldForm = false;">取消</el-button>
                                     </div>
                                 </div>
 
@@ -290,17 +416,14 @@
                             $formData['fields'] = [];
                         }
                         ?>
-
-
                     </div>
-
                 </div>
-                <div class="be-col-24 be-lg-col-auto">
+                <div class="be-col-24 be-xl-col-auto">
                     <div class="be-mt-150 be-pl-150"></div>
                 </div>
-                <div class="be-col-24 be-lg-col">
+                <div class="be-col-24 be-xl-col-auto">
 
-                    <div class="be-p-150 be-bc-fff">
+                    <div class="be-p-150 be-bc-fff" style="max-height: 400px;">
                         <table class="monkey-push-driver-form-table">
                             <tr>
                                 <td>是否启用：</td>
@@ -308,7 +431,7 @@
                                     <el-form-item prop="is_enable">
                                         <el-switch v-model.number="formData.is_enable" :active-value="1" :inactive-value="0"></el-switch>
                                     </el-form-item>
-                                    <?php $formData['is_enable'] = ($this->pushDriver ? $this->pushDriver->is_enable : 0); ?>
+                                    <?php $formData['is_enable'] = ($this->pushDriver ? $this->pushDriver->is_enable : 1); ?>
                                 </td>
                             </tr>
                             <tr>
@@ -368,8 +491,10 @@
                 formData: <?php echo json_encode($formData); ?>,
                 loading: false,
 
+                headerForm: false,
                 fieldForm: false,
 
+                header: false,
                 field: false,
 
                 t: false
@@ -378,11 +503,53 @@
                 ?>
             },
             methods: {
+                addHeader() {
+                    this.header = false;
+                    this.formData.header_name = "";
+                    this.formData.header_value = "";
+
+                    this.headerForm = true;
+                },
+                editHeader(header) {
+                    this.header = header;
+                    this.formData.header_name = header.name;
+                    this.formData.header_value = header.value;
+
+                    this.headerForm = true;
+                },
+                saveHeader() {
+                    if (this.header) {
+                        this.header.name = this.formData.header_name;
+                        this.header.value = this.formData.header_value;
+                    } else {
+                        this.formData.headers.push({
+                            name: this.formData.header_name,
+                            value: this.formData.header_value,
+                        });
+                    }
+
+                    console.log(this.header);
+                    console.log(this.formData);
+
+                    this.header = false;
+                    this.headerForm = false;
+                },
+                deleteHeader(header) {
+                    let _this = this;
+                    this.$confirm("确认要删除请求头（" + header.name + "）么？", "操作确认？", {
+                        confirmButtonText: "确定",
+                        cancelButtonText: "取消",
+                        type: "warning"
+                    }).then(function(){
+                        _this.formData.headers.splice(_this.formData.headers.indexOf(header), 1);
+                    }).catch(function(){});
+                },
                 addField() {
                     this.field = false;
                     this.formData.field_name = "";
                     this.formData.field_label = "";
                     this.formData.field_default = "";
+                    this.formData.field_required = 0;
 
                     this.fieldForm = true;
                 },
@@ -391,23 +558,26 @@
                     this.formData.field_name = field.name;
                     this.formData.field_label = field.label;
                     this.formData.field_default = field.default;
+                    this.formData.field_required = field.required;
 
                     this.fieldForm = true;
                 },
                 saveField() {
-
                     if (this.field) {
                         this.field.name = this.formData.field_name;
                         this.field.label = this.formData.field_label;
                         this.field.default = this.formData.field_default;
+                        this.field.required = this.formData.field_required;
                     } else {
                         this.formData.fields.push({
                             name: this.formData.field_name,
                             label: this.formData.field_label,
                             default: this.formData.field_default,
+                            required: this.formData.field_required,
                         });
                     }
 
+                    this.field = false;
                     this.fieldForm = false;
                 },
                 deleteField(field) {

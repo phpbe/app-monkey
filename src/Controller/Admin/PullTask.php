@@ -392,7 +392,7 @@ class PullTask extends Auth
                 $response->set('pullDrivers', $pullDrivers);
 
                 $response->set('title', '新建采集任务');
-                $response->display('App.Monkey.Admin.PullTask.selectPullDriver');
+                $response->display();
             } else {
                 $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pullDriverId);
                 $response->set('pullDriver', $pullDriver);
