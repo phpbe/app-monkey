@@ -165,7 +165,7 @@ class PushDriver extends Auth
                         'items' => [
                             [
                                 'label' => '',
-                                'tooltip' => '创建发布器',
+                                'tooltip' => '创建发布任务',
                                 'action' => 'createPushTask',
                                 'target' => 'self',
                                 'ui' => [

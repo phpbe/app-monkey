@@ -324,25 +324,30 @@ class PushTask
                 throw new ServiceException('第' . $i . '个发布字段类型无法识别！');
             }
 
-            $field['value_pull_task_field'] = '';
-            $field['value_default'] = $field['default'];
-            $field['value_custom'] = '';
-
             switch ($field['value_type']) {
                 case 'pull_task_field':
                     if (!isset($field['value_pull_task_field']) || !is_string($field['value_pull_task_field'])) {
                         throw new ServiceException('第' . $i . '个发布字段值未选择！');
                     }
+
+                    $field['value_default'] = '';
+                    $field['value_custom'] = '';
                     break;
                 case 'default':
                     if (!isset($field['value_default']) || !is_string($field['value_default'])) {
                         throw new ServiceException('第' . $i . '个发布字段默认值缺失！');
                     }
+
+                    $field['value_pull_task_field'] = '';
+                    $field['value_custom'] = '';
                     break;
                 case 'custom':
                     if (!isset($field['value_custom']) || !is_string($field['value_custom'])) {
                         throw new ServiceException('第' . $i . '个发布字段自定义值未填写！');
                     }
+
+                    $field['value_pull_task_field'] = '';
+                    $field['value_default'] = '';
                     break;
             }
 
@@ -451,9 +456,27 @@ class PushTask
             throw new ServiceException('发布任务（# ' . $pushTaskId . '）不存在！');
         }
 
-        $tuplePushTask->status = 'prepared';
-        $tuplePushTask->update_time = date('Y-m-d H:i:s');
-        $tuplePushTask->update();
+        $db = Be::getDb();
+        $db->startTransaction();
+        try {
+            $sql = 'DELETE FROM monkey_push_task_log WHERE push_task_id=?';
+            $db->query($sql, [$pushTaskId]);
+
+            $tuplePushTask->status = 'prepared';
+            $tuplePushTask->update_time = date('Y-m-d H:i:s');
+            $tuplePushTask->update();
+
+            $db->commit();
+
+            Be::getService('App.System.Task')->trigger('Monkey.PushTask');
+
+        } catch (\Throwable $t) {
+            $db->rollback();
+            Be::getLog()->error($t);
+
+            throw new ServiceException( '发布任务启动失败！');
+        }
+
     }
 
 }

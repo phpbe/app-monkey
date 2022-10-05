@@ -8,8 +8,10 @@ use Be\AdminPlugin\Detail\Item\DetailItemToggleIcon;
 use Be\AdminPlugin\Table\Item\TableItemImage;
 use Be\AdminPlugin\Table\Item\TableItemLink;
 use Be\AdminPlugin\Form\Item\FormItemSelect;
+use Be\AdminPlugin\Table\Item\TableItemProgress;
 use Be\AdminPlugin\Table\Item\TableItemSelection;
 use Be\AdminPlugin\Table\Item\TableItemSwitch;
+use Be\AdminPlugin\Table\Item\TableItemToggleTag;
 use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
 
@@ -164,6 +166,42 @@ class PushTask extends Auth
                             },
                         ],
                         [
+                            'name' => 'total',
+                            'label' => '总计',
+                            'width' => '90',
+                            'value' =>  function ($row) {
+                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_task_id = ?';
+                                $count = (int)Be::getDb()->getValue($sql, [$row['pull_task_id']]);
+                                return $count;
+                            },
+                        ],
+                        [
+                            'name' => 'pushed',
+                            'label' => '已发布',
+                            'driver' => TableItemLink::class,
+                            'action' => 'goPushTaskLog',
+                            'target' => 'blank',
+                            'width' => '90',
+                            'value' =>  function ($row) {
+                                $sql = 'SELECT COUNT(DISTINCT content_id) FROM monkey_push_task_log WHERE push_task_id = ?';
+                                $count = (int)Be::getDb()->getValue($sql, [$row['id']]);
+                                return $count;
+                            },
+                        ],
+                        [
+                            'name' => 'process',
+                            'label' => '进度',
+                            'width' => '120',
+                            'driver' => TableItemProgress::class,
+                            'value' =>  function ($row) {
+                                if ($row['total'] === 0) {
+                                    return 0;
+                                } else {
+                                    return round($row['pushed'] * 100 / $row['total'], 1);
+                                }
+                            },
+                        ],
+                        [
                             'name' => 'ordering',
                             'label' => '排序',
                             'width' => '80',
@@ -213,6 +251,7 @@ class PushTask extends Auth
                             [
                                 'label' => '',
                                 'tooltip' => '删除',
+                                'task' => 'fieldEdit',
                                 'postData' => [
                                     'field' => 'is_delete',
                                     'value' => '1',
@@ -232,7 +271,7 @@ class PushTask extends Auth
             ],
 
             'detail' => [
-                'title' => '发布任务发布任务详情',
+                'title' => '发布任务详情',
                 'theme' => 'Blank',
                 'form' => [
                     'items' => [
@@ -441,6 +480,199 @@ class PushTask extends Auth
             Be::getService('App.Monkey.Admin.PushTask')->run($pushTaskId);
             $response->success('发布任务已启动');
         }
+    }
+
+
+    /**
+     * 发布任务 - 日志
+     *
+     * @BePermission("发布任务 - 日志", ordering="3.34")
+     */
+    public function goPushTaskLog()
+    {
+        $request = Be::getRequest();
+        $response = Be::getResponse();
+
+        $postData = $request->post('data', '', '');
+        if ($postData) {
+            $postData = json_decode($postData, true);
+            if (isset($postData['row']['id']) && $postData['row']['id']) {
+                $response->redirect(beAdminUrl('Monkey.PushTask.pushTaskLogs', ['push_task_id' => $postData['row']['id']]));
+            }
+        }
+    }
+
+    /**
+     * 发布任务 - 日志
+     *
+     * @BePermission("发布任务 - 日志", ordering="3.34")
+     */
+    public function pushTaskLogs()
+    {
+        $request = Be::getRequest();
+        $response = Be::getResponse();
+
+        $pushTaskId = $request->get('push_task_id', '');
+
+        Be::getAdminPlugin('Curd')->setting([
+
+            'label' => '发布任务日志',
+            'table' => 'monkey_push_task_log',
+
+            'grid' => [
+                'title' => '发布任务日志',
+
+                'filter' => [
+                    ['push_task_id', '=', $pushTaskId],
+                ],
+
+                'orderBy' => 'create_time',
+                'orderByDir' => 'DESC',
+
+                'tableToolbar' => [
+                    'items' => [
+                        [
+                            'label' => '批量删除',
+                            'task' => 'delete',
+                            'target' => 'ajax',
+                            'confirm' => '确认要删除吗？',
+                            'ui' => [
+                                'icon' => 'el-icon-delete',
+                                'type' => 'danger'
+                            ]
+                        ],
+                    ]
+                ],
+
+
+                'table' => [
+
+                    // 未指定时取表的所有字段
+                    'items' => [
+                        [
+                            'driver' => TableItemSelection::class,
+                            'width' => '50',
+                        ],
+                        [
+                            'name' => 'content_title',
+                            'label' => '文章标题',
+                            'align' => 'left',
+                            'value' => function($row) {
+                                $sql = 'SELECT title FROM monkey_content WHERE id=?';
+                                $contentTitle = Be::getDb()->getValue($sql, [$row['content_id']]);
+                                if ($contentTitle) {
+                                    return $contentTitle;
+                                }
+                                return '';
+                            },
+                        ],
+                        [
+                            'name' => 'success',
+                            'label' => '是否成功',
+                            'width' => '90',
+                            'driver' => TableItemToggleTag::class,
+                        ],
+                        [
+                            'name' => 'create_time',
+                            'label' => '时间',
+                            'width' => '180',
+                            'sortable' => true,
+                        ],
+                    ],
+                    'operation' => [
+                        'label' => '操作',
+                        'width' => '120',
+                        'items' => [
+                            [
+                                'label' => '',
+                                'tooltip' => '查看',
+                                'task' => 'detail',
+                                'drawer' => [
+                                    'title' => '日志详情',
+                                    'width' => '80%'
+                                ],
+                                'ui' => [
+                                    'type' => 'primary',
+                                    ':underline' => 'false',
+                                    'style' => 'font-size: 20px;',
+                                ],
+                                'icon' => 'el-icon-search',
+                            ],
+                            [
+                                'label' => '',
+                                'tooltip' => '删除',
+                                'task' => 'delete',
+                                'confirm' => '确认要删除么？',
+                                'target' => 'ajax',
+                                'ui' => [
+                                    'type' => 'danger',
+                                    ':underline' => 'false',
+                                    'style' => 'font-size: 20px;',
+                                ],
+                                'icon' => 'el-icon-delete',
+                            ],
+                        ]
+                    ],
+                ],
+            ],
+
+            'detail' => [
+                'title' => '发布任务详情',
+                'theme' => 'Blank',
+                'form' => [
+                    'items' => [
+                        [
+                            'name' => 'id',
+                            'label' => 'ID',
+                        ],
+                        [
+                            'name' => 'content_title',
+                            'label' => '文章标题',
+                            'value' => function($row) {
+                                $sql = 'SELECT title FROM monkey_content WHERE id=?';
+                                $contentTitle = Be::getDb()->getValue($sql, [$row['content_id']]);
+                                if ($contentTitle) {
+                                    return $contentTitle;
+                                }
+                                return '';
+                            },
+                        ],
+                        [
+                            'name' => 'request',
+                            'label' => '请求数据',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'json',
+                            'value' => function($row) {
+                                return json_encode(unserialize($row['request']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                            }
+                        ],
+                        [
+                            'name' => 'response',
+                            'label' => '响应数据',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'auto',
+                            'value' => function($row) {
+                                return $row['response'];
+                            }
+                        ],
+                        [
+                            'name' => 'success',
+                            'label' => '是否成功',
+                            'driver' => DetailItemToggleIcon::class,
+                        ],
+                        [
+                            'name' => 'message',
+                            'label' => '消息',
+                        ],
+                        [
+                            'name' => 'create_time',
+                            'label' => '创建时间',
+                        ],
+                    ]
+                ],
+            ],
+
+        ])->execute();
     }
 
 }

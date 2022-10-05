@@ -44,35 +44,64 @@ class PushTask extends Task
 
                     $headers = [];
                     if (is_array($pushTask->headers) && count($pushTask->headers) > 0) {
-                        foreach($pushTask->headers as $header) {
-                            $headers[$header['name']] = $header['value'];
+                        foreach($pushTask->headers as $pushTaskHeader) {
+                            $headers[$pushTaskHeader['name']] = $pushTaskHeader['value'];
                         }
                     }
 
                     $postData = [];
-                    foreach($pushTask->fields as $field) {
-                        if ($field['is_enable'] === 1) {
+                    foreach($pushTask->fields as $pushTaskField) {
+                        if ($pushTaskField['is_enable'] === 1) {
                             $value = '';
-                            switch ($field['value_type']) {
+                            switch ($pushTaskField['value_type']) {
                                 case 'pull_task_field':
-                                    $contentField = $field['value_pull_task_field'];
-                                    if (isset($content->fields[$contentField])) {
-                                        $value = $content->fields[$contentField];
+                                    foreach ($content->fields as $contentField) {
+                                        if ($contentField['name'] === $pushTaskField['value_pull_task_field']) {
+                                            $value = $contentField['content'];
+                                            break;
+                                        }
                                     }
                                     break;
                                 case 'default':
-                                    $value = $field['value_default'];
+                                    $value = $pushTaskField['value_default'];
                                     break;
                                 case 'custom':
-                                    $value = $field['value_custom'];
+                                    $value = $pushTaskField['value_custom'];
                                     break;
                             }
 
-                            $postData[$field['name']] = $value;
+                            $postData[$pushTaskField['name']] = $value;
                         }
                     }
 
-                    Curl::post($pushTask->url, $headers, $postData);
+                    $pushTaskLog = [];
+                    $pushTaskLog['id'] = $db->uuid();
+                    $pushTaskLog['push_task_id'] = $pushTask->id;
+                    $pushTaskLog['content_id'] = $content->id;
+                    $pushTaskLog['request'] = serialize([
+                        'url' => $pushTask->url,
+                        'postData' => $postData,
+                        'headers' => $headers,
+                    ]);
+
+                    $pushTaskLog['response'] = '';
+                    $pushTaskLog['message'] = '';
+                    try {
+                        $pushTaskLog['response'] = Curl::post($pushTask->url, $postData, $headers);
+                        $pushTaskLog['success'] = 1;
+                    } catch (\Throwable $t) {
+                        $pushTaskLog['success'] = 0;
+
+                        $message = $t->getMessage();
+                        if (mb_strlen($message) > 500) {
+                            $message = mb_substr($message, 0, 500);
+                        }
+                        $pushTaskLog['message'] = $message;
+                    }
+
+                    $pushTaskLog['create_time'] = date('Y-m-d H:i:s');
+
+                    $db->insert('monkey_push_task_log', $pushTaskLog);
 
                     if ($pushTask->interval > 0) {
                         if (Be::getRuntime()->isSwooleMode()) {
@@ -82,6 +111,10 @@ class PushTask extends Task
                         }
                     }
                 }
+
+                $sql = 'UPDATE monkey_push_task SET status=\'completed\', message=\'\', update_time = \'' . date('Y-m-d H:i:s') . '\' WHERE id=\'' . $pushTask->id . '\'';
+                $db->query($sql);
+
             } catch (\Throwable $t) {
                 $message = $t->getMessage();
                 if (mb_strlen($message) > 500) {
