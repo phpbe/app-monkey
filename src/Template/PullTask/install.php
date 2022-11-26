@@ -30,6 +30,11 @@ BeMonkey = {
 
     step: 'init',
 
+    //当前页面
+    currentPage: '',
+    // 下一页面
+    nextPage: false,
+
     // 链接
     links: false,
 
@@ -53,16 +58,11 @@ BeMonkey = {
 
     // 开始时间
     startTime: '',
+
     // 结束时间
     endTime: '',
 
-
-    // 获取当前页面
-    getCurrentPage: function () {
-        return "<?php echo $this->pullTask->start_page; ?>";
-    },
-
-    getNextPage: function () {
+    getNewNextPage: function () {
         <?php echo $this->pullTask->get_next_page_script; ?>
     },
 
@@ -116,6 +116,18 @@ BeMonkey = {
             }
         }
 
+        let currentPage = localStorage.getItem("be:monkey:currentPage");
+        if (currentPage) {
+            this.currentPage = currentPage;
+        } else {
+            this.currentPage = "<?php echo $this->pullTask->start_page; ?>";
+        }
+
+        let nextPage = localStorage.getItem("be:monkey:nextPage");
+        if (nextPage) {
+            this.nextPage = nextPage;
+        }
+
         let links = localStorage.getItem('be:monkey:links');
         if (!links) {
             this.links = [];
@@ -139,6 +151,8 @@ BeMonkey = {
         }
 
         this.dashboard();
+
+        // console.log(this);
 
         // 按当前步骤执行操作
         switch (this.step) {
@@ -300,6 +314,15 @@ BeMonkey = {
 
     // 采集分页页面
     processPage: function () {
+        let nextPage = this.getNewNextPage();
+        if (nextPage) {
+            this.nextPage = nextPage;
+            localStorage.setItem("be:monkey:nextPage", nextPage);
+        } else {
+            this.nextPage = false;
+            localStorage.removeItem("be:monkey:nextPage");
+        }
+
         this.status("采集当前页面中的链接...");
 
         let links = this.getLinks();
@@ -323,20 +346,25 @@ BeMonkey = {
                 window.location.href = links[0];
             }, <?php echo $this->pullTask->interval; ?>);
         } else {
-
             this.totalPageLinks = 0;
             localStorage.setItem("be:monkey:totalPageLinks", 0);
 
-            let nextPage = this.getNextPage();
-            if (nextPage) {
+            if (this.nextPage) {
+                this.currentPage = this.nextPage;
+                localStorage.setItem("be:monkey:currentPage", this.currentPage);
+
+                this.nextPage = false;
+                localStorage.removeItem("be:monkey:nextPage");
+
                 this.step = "page";
                 localStorage.setItem("be:monkey:step", "page");
 
                 // 分页页面未采集到链接
                 this.status("未采集到链接，跑转到下页...");
 
+                let _this = this;
                 setTimeout(function () {
-                    window.location.href = nextPage;
+                    window.location.href = _this.currentPage;
                 }, <?php echo $this->pullTask->interval; ?>);
             } else {
                 this.complete();
@@ -378,26 +406,45 @@ BeMonkey = {
                 },
                 responseType: "json",
                 onload: function (response) {
+
                     if (response.status !== 200) {
-                        _this.status("提交数据失败，60秒后再次尝试！");
                         console.log(response);
+
+                        _this.status("提交数据失败，60秒后再次尝试！");
 
                         setTimeout(function () {
                             window.location.reload();
                         }, 60000);
+
+                        return;
+                    }
+
+                    if (!response.response) {
+                        console.log(response);
+
+                        _this.status("提交数据失败（无有效返回），60秒后再次尝试！");
+
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 60000);
+
+                        return;
                     }
 
                     if (!response.response.success) {
+                        console.log(response);
+
                         let message = "";
                         if (response.response.message) {
                             message = response.response.message;
                         }
                         _this.status("提交数据失败（" + message + "），60秒后再次尝试！");
-                        console.log(response);
 
                         setTimeout(function () {
                             window.location.reload();
                         }, 60000);
+
+                        return;
                     }
 
                     // 采集成功后将链接从列表中移除
@@ -417,8 +464,14 @@ BeMonkey = {
                             window.location.href = _this.links[0];
                         }, <?php echo $this->pullTask->interval; ?>);
                     } else {
-                        let nextPage = _this.getNextPage();
-                        if (nextPage) {
+
+                        if (_this.nextPage) {
+                            _this.currentPage = _this.nextPage;
+                            localStorage.setItem("be:monkey:currentPage", _this.currentPage);
+
+                            _this.nextPage = false;
+                            localStorage.removeItem("be:monkey:nextPage");
+
                             _this.step = "page";
                             localStorage.setItem("be:monkey:step", "page");
 
@@ -426,7 +479,7 @@ BeMonkey = {
                             _this.status("当前分页所有链接采集完成，前往下页...");
 
                             setTimeout(function () {
-                                window.location.href = nextPage;
+                                window.location.href = _this.currentPage;
                             }, <?php echo $this->pullTask->interval; ?>);
                         } else {
                             _this.complete();
@@ -435,16 +488,22 @@ BeMonkey = {
                 }
             });
         } else {
-            let nextPage = this.getNextPage();
-            if (nextPage) {
+            if (this.nextPage) {
+                this.currentPage = this.nextPage;
+                localStorage.setItem("be:monkey:currentPage", this.currentPage);
+
+                this.nextPage = false;
+                localStorage.removeItem("be:monkey:nextPage");
+
                 this.step = "page";
                 localStorage.setItem("be:monkey:step", "page");
 
                 // 分页页面未采集到链接
                 this.status("当前分页所有链接采集完成，前往下页...");
 
+                let _this = this;
                 setTimeout(function () {
-                    window.location.href = nextPage;
+                    window.location.href = _this.currentPage;
                 }, <?php echo $this->pullTask->interval; ?>);
             } else {
                 this.complete();
@@ -453,6 +512,12 @@ BeMonkey = {
     },
 
     start: function () {
+        this.currentPage = "<?php echo $this->pullTask->start_page; ?>";
+        localStorage.setItem("be:monkey:currentPage", this.currentPage);
+
+        this.nextPage = false;
+        localStorage.removeItem("be:monkey:nextPage");
+
         this.running = 1;
         localStorage.setItem("be:monkey:running", 1);
 
@@ -475,7 +540,7 @@ BeMonkey = {
         localStorage.setItem("be:monkey:endTime", "");
 
         // 跳转到开始页
-        window.location.href = this.getCurrentPage();
+        window.location.href = this.currentPage;
     },
 
     pause: function () {
