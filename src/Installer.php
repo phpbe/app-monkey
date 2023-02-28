@@ -17,15 +17,15 @@ class Installer extends \Be\App\Installer
 	{
         $db = Be::getDb();
         $tableNames = $db->getTableNames();
-        if (in_array('monkey_', $tableNames)) {
-            if (in_array('monkey_', $tableNames)) {
+        if (in_array('monkey_content', $tableNames)) {
+            if (in_array('monkey_push_task_log', $tableNames)) {
                 return;
             } else {
                 throw new RuntimeException('剑测到部分数据表已存在，请检查数据库！');
             }
         }
 
-        $sql = file_get_contents(__DIR__ . '/installer.sql');
+        $sql = file_get_contents(__DIR__ . '/exe/install/install.sql');
         $sqls = preg_split('/; *[\r\n]+/', $sql);
         foreach ($sqls as $sql) {
             $sql = trim($sql);

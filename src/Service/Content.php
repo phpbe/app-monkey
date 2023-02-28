@@ -15,22 +15,22 @@ class Content
      */
     public function receive(array $data)
     {
-        if (!isset($data['pull_task_id']) || !is_string($data['pull_task_id'])) {
-            throw new ServiceException('参数（pull_task_id）参数缺失！');
+        if (!isset($data['pull_driver_id']) || !is_string($data['pull_driver_id'])) {
+            throw new ServiceException('参数（pull_driver_id）参数缺失！');
         }
-        $data['pull_task_id'] = trim($data['pull_task_id']);
-        if ($data['pull_task_id'] === '') {
-            throw new ServiceException('参数（pull_task_id）不能为空！');
+        $data['pull_driver_id'] = trim($data['pull_driver_id']);
+        if ($data['pull_driver_id'] === '') {
+            throw new ServiceException('参数（pull_driver_id）不能为空！');
         }
 
         $db = Be::getDb();
-        $sql = 'SELECT * FROM monkey_pull_task WHERE id=? AND is_delete = 0';
-        $pullTask = $db->getObject($sql, [$data['pull_task_id']]);
-        if (!$pullTask) {
-            throw new ServiceException('采集任务（# ' . $data['pull_task_id'] . '）不存在！');
+        $sql = 'SELECT * FROM monkey_pull_driver WHERE id=? AND is_delete = 0';
+        $pullDriver = $db->getObject($sql, [$data['pull_driver_id']]);
+        if (!$pullDriver) {
+            throw new ServiceException('采集器（# ' . $data['pull_driver_id'] . '）不存在！');
         }
 
-        $fields = unserialize($pullTask->fields);
+        $fields = unserialize($pullDriver->fields);
 
         if (!isset($data['url']) || !is_string($data['url'])) {
             throw new ServiceException('参数（url）缺失！');
@@ -109,7 +109,7 @@ class Content
             $tupleContent = Be::getTuple('monkey_content');
             try {
                 $tupleContent->loadBy([
-                    'pull_task_id' => $data['pull_task_id'],
+                    'pull_driver_id' => $data['pull_driver_id'],
                     'url' => $data['url'],
                 ]);
             } catch (\Throwable $t) {
@@ -118,7 +118,7 @@ class Content
             $isNew = !$tupleContent->isLoaded();
 
             $now = date('Y-m-d H:i:s');
-            $tupleContent->pull_task_id = $data['pull_task_id'];
+            $tupleContent->pull_driver_id = $data['pull_driver_id'];
             $tupleContent->url = $data['url'];
             $tupleContent->title = $title;
             $tupleContent->fields = serialize($data['fields']);

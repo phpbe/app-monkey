@@ -36,7 +36,7 @@ class PushTask extends Task
 
                 $pushTask->fields = unserialize($pushTask->fields);
 
-                $sql = 'SELECT * FROM monkey_content WHERE pull_task_id = \''.$pushTask->pull_task_id.'\'';
+                $sql = 'SELECT * FROM monkey_content WHERE pull_driver_id = \''.$pushTask->pull_driver_id.'\'';
                 $contents = $db->getYieldObjects($sql);
                 foreach ($contents as $content) {
 
@@ -54,9 +54,9 @@ class PushTask extends Task
                         if ($pushTaskField['is_enable'] === 1) {
                             $value = '';
                             switch ($pushTaskField['value_type']) {
-                                case 'pull_task_field':
+                                case 'pull_driver_field':
                                     foreach ($content->fields as $contentField) {
-                                        if ($contentField['name'] === $pushTaskField['value_pull_task_field']) {
+                                        if ($contentField['name'] === $pushTaskField['value_pull_driver_field']) {
                                             $value = $contentField['content'];
                                             break;
                                         }

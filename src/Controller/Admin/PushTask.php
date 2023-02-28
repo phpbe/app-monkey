@@ -170,8 +170,8 @@ class PushTask extends Auth
                             'label' => '总计',
                             'width' => '90',
                             'value' =>  function ($row) {
-                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_task_id = ?';
-                                $count = (int)Be::getDb()->getValue($sql, [$row['pull_task_id']]);
+                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_driver_id = ?';
+                                $count = (int)Be::getDb()->getValue($sql, [$row['pull_driver_id']]);
                                 return $count;
                             },
                         ],
@@ -372,7 +372,7 @@ class PushTask extends Auth
         $response = Be::getResponse();
 
         $pushDriverId = $request->get('push_driver_id', '');
-        $pullTaskId = $request->get('pull_task_id', '');
+        $pullDriverId = $request->get('pull_driver_id', '');
 
         if ($request->isAjax()) {
             try {
@@ -386,18 +386,18 @@ class PushTask extends Auth
                 $response->json();
             }
         } else {
-            if ($pushDriverId === '' || $pullTaskId === '') {
+            if ($pushDriverId === '' || $pullDriverId === '') {
                 $pushDrivers = Be::getService('App.Monkey.Admin.PushDriver')->getEnabledPushDrivers();
                 $response->set('pushDrivers', $pushDrivers);
                 $response->set('pushDriverId', $pushDriverId);
 
-                $pullTasks = Be::getService('App.Monkey.Admin.PullTask')->getEnabledPullTasks();
+                $pullDrivers = Be::getService('App.Monkey.Admin.PullDriver')->getEnabledPullDrivers();
                 $serviceContent = Be::getService('App.Monkey.Admin.Content');
-                foreach ($pullTasks as $pullTask) {
-                    $pullTask->content_count = $serviceContent->getPullTaskContentCount($pullTask->id);
+                foreach ($pullDrivers as $pullDriver) {
+                    $pullDriver->content_count = $serviceContent->getPullDriverContentCount($pullDriver->id);
                 }
-                $response->set('pullTasks', $pullTasks);
-                $response->set('pullTaskId', $pullTaskId);
+                $response->set('pullDrivers', $pullDrivers);
+                $response->set('pullDriverId', $pullDriverId);
 
                 $response->set('title', '新建发布任务');
                 $response->display();
@@ -406,9 +406,9 @@ class PushTask extends Auth
                 $response->set('pushDriver', $pushDriver);
                 $response->set('pushDriverId', $pushDriverId);
 
-                $pullTask = Be::getService('App.Monkey.Admin.PullTask')->getPullTask($pullTaskId);
-                $response->set('pullTask', $pullTask);
-                $response->set('pullTaskId', $pullTaskId);
+                $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pullDriverId);
+                $response->set('pullDriver', $pullDriver);
+                $response->set('pullDriverId', $pullDriverId);
 
                 $response->set('pushTask', false);
 
@@ -455,8 +455,8 @@ class PushTask extends Auth
             $pushDriver = Be::getService('App.Monkey.Admin.PushDriver')->getPushDriver($pushTask->push_driver_id);
             $response->set('pushDriver', $pushDriver);
 
-            $pullTask = Be::getService('App.Monkey.Admin.PullTask')->getPullTask($pushTask->pull_task_id);
-            $response->set('pullTask', $pullTask);
+            $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pushTask->pull_driver_id);
+            $response->set('pullDriver', $pullDriver);
 
             $response->set('title', '编辑发布任务');
 

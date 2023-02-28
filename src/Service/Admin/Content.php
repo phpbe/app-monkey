@@ -29,17 +29,17 @@ class Content
     }
 
     /**
-     * 获取采集任务采集到的文章数
-     * @param $pullTaskId
+     * 获取采集器采集到的文章数
+     * @param string $pullDriverId
      * @return false|object
      * @throws \Be\Db\DbException
      * @throws \Be\Runtime\RuntimeException
      */
-    public function getPullTaskContentCount($pullTaskId): int
+    public function getPullDriverContentCount(string $pullDriverId): int
     {
         $db = Be::getDb();
-        $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_task_id=?';
-        return (int)$db->getValue($sql, [$pullTaskId]);
+        $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_driver_id=?';
+        return (int)$db->getValue($sql, [$pullDriverId]);
     }
 
 

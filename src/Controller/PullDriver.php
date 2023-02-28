@@ -4,22 +4,22 @@ namespace Be\App\Monkey\Controller;
 
 use Be\Be;
 
-class PullTask
+class PullDriver
 {
 
     /**
      * 安装没猴脚本
      *
-     * @BeRoute("\Be\Be::getService('App.Monkey.PullTask')->getPullTaskInstallUrl($params)")
+     * @BeRoute("\Be\Be::getService('App.Monkey.PullDriver')->getPullDriverInstallUrl($params)")
      */
     public function install()
     {
         $request = Be::getRequest();
         $response = Be::getResponse();
 
-        $pullTaskId = $request->get('id', '');
-        $pullTask = Be::getService('App.Monkey.PullTask')->getPullTask($pullTaskId);
-        $response->set('pullTask', $pullTask);
+        $pullDriverId = $request->get('id', '');
+        $pullDriver = Be::getService('App.Monkey.PullDriver')->getPullDriver($pullDriverId);
+        $response->set('pullDriver', $pullDriver);
 
         $response->header('Content-Type', 'application/javascript');
         $response->display();

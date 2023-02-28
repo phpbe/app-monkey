@@ -254,7 +254,9 @@ class PullDriver
             }
 
             $db->commit();
-
+            
+            $this->makeJsFile($tuplePullDriver->id);
+            
         } catch (\Throwable $t) {
             $db->rollback();
             Be::getLog()->error($t);
@@ -265,5 +267,27 @@ class PullDriver
         return $tuplePullDriver->toObject();
     }
 
+
+    /**
+     * 生成实例JS 文件
+     * @return void
+     */
+    private function makeJsFile($pullDriverId) {
+        $response = Be::getResponse();
+        $pullDriver = Be::getService('App.Monkey.PullDriver')->getPullDriver($pullDriverId);
+        $response->set('pullDriver', $pullDriver);
+
+        $code = $response->fetch('App.Monkey.PullDriver.install');
+        $path = Be::getRuntime()->getRootPath() . '/www/monkey/pull-driver/' . $pullDriverId . '-v' . $pullDriver->version.'.user.js';
+
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+            @chmod($dir, 0777);
+        }
+
+        file_put_contents($path, $code, LOCK_EX);
+        @chmod($path, 0777);
+    }
 
 }

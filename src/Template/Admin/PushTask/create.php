@@ -94,12 +94,12 @@
             <div class="be-row be-mt-200">
                 <div class="be-col-24 be-xl-col-auto">
                     <div class="be-p-150 be-bc-fff">
-                        <div class="be-mt-100"><span class="be-c-red">*</span> 采集任务：</div>
+                        <div class="be-mt-100"><span class="be-c-red">*</span> 采集器：</div>
                         <div class="be-mt-50 be-b-eee" style="width: 400px; height: 240px; overflow-y: scroll;">
-                            <div class="be-px-100 be-py-50" v-for="(pullTask, pullTaskIndex) in pullTasks">
-                                <el-radio v-model="formData.pull_task_id" :label="pullTask.id" @change="togglePullTask(pullTask);">{{pullTask.name}} </el-radio>
+                            <div class="be-px-100 be-py-50" v-for="(pullDriver, pullDriverIndex) in pullDrivers">
+                                <el-radio v-model="formData.pull_driver_id" :label="pullDriver.id" @change="togglePullDriver(pullDriver);">{{pullDriver.name}} </el-radio>
                             </div>
-                            <?php $formData['pull_task_id'] = $this->pullTaskId;; ?>
+                            <?php $formData['pull_driver_id'] = $this->pullDriverId;; ?>
                         </div>
 
                     </div>
@@ -111,31 +111,31 @@
 
                 <div class="be-col-24 be-xl-col">
 
-                    <div class="be-p-150 be-bc-fff" style="height: 100%;" v-show="pullTask != false">
+                    <div class="be-p-150 be-bc-fff" style="height: 100%;" v-show="pullDriver != false">
                         <table class="monkey-task-form-table">
                             <tr>
-                                <td>采集任务名称：</td>
-                                <td>{{pullTask.name}}</td>
+                                <td>采集器名称：</td>
+                                <td>{{pullDriver.name}}</td>
                             </tr>
                             <tr>
                                 <td>描述：</td>
-                                <td><div v-html="pullTask.description"></div></td>
+                                <td><div v-html="pullDriver.description"></div></td>
                             </tr>
                             <tr>
                                 <td>版本：</td>
-                                <td>{{pullTask.version}}</td>
+                                <td>{{pullDriver.version}}</td>
                             </tr>
                             <tr>
                                 <td>已采集文章数：</td>
-                                <td>{{pullTask.content_count}}</td>
+                                <td>{{pullDriver.content_count}}</td>
                             </tr>
                             <tr>
                                 <td>创建时间：</td>
-                                <td>{{pullTask.create_time}}</td>
+                                <td>{{pullDriver.create_time}}</td>
                             </tr>
                             <tr>
                                 <td>更新时间：</td>
-                                <td>{{pullTask.update_time}}</td>
+                                <td>{{pullDriver.update_time}}</td>
                             </tr>
                         </table>
                     </div>
@@ -157,8 +157,8 @@
                 pushDrivers: <?php echo json_encode($this->pushDrivers); ?>,
                 pushDriver: false,
 
-                pullTasks: <?php echo json_encode($this->pullTasks); ?>,
-                pullTask: false,
+                pullDrivers: <?php echo json_encode($this->pullDrivers); ?>,
+                pullDriver: false,
 
                 loading: false,
 
@@ -171,8 +171,8 @@
                 togglePushDriver: function (pushDriver) {
                     this.pushDriver = pushDriver;
                 },
-                togglePullTask: function (pullTask) {
-                    this.pullTask = pullTask;
+                togglePullDriver: function (pullDriver) {
+                    this.pullDriver = pullDriver;
                 },
                 save: function () {
                     if (this.pushDriver === false) {
@@ -180,15 +180,15 @@
                         return;
                     }
 
-                    if (this.pullTask === false) {
-                        this.$message.error("请选择一个采集任务！");
+                    if (this.pullDriver === false) {
+                        this.$message.error("请选择一个采集器！");
                         return;
                     }
 
                     let url = "<?php echo beAdminUrl('Monkey.PushTask.create'); ?>";
                     url += (url.indexOf("?") === -1 ? '?' : '&');
                     url += "push_driver_id=" + this.pushDriver.id;
-                    url += "&pull_task_id=" + this.pullTask.id;
+                    url += "&pull_driver_id=" + this.pullDriver.id;
                     window.location.href = url;
                 },
                 cancel: function () {

@@ -79,7 +79,7 @@
             <?php
             $formData['id'] = ($this->pushTask ? $this->pushTask->id : '');
             $formData['push_driver_id'] = $this->pushDriver->id;
-            $formData['pull_task_id'] = $this->pullTask->id;
+            $formData['pull_driver_id'] = $this->pullDriver->id;
             ?>
 
             <div class="be-row">
@@ -99,7 +99,7 @@
                                             show-word-limit>
                                     </el-input>
                                 </el-form-item>
-                                <?php $formData['name'] = ($this->pushTask ? $this->pushTask->name :  ($this->pullTask->name . ' 发布到 ' . $this->pushDriver->name)); ?>
+                                <?php $formData['name'] = ($this->pushTask ? $this->pushTask->name :  ($this->pullDriver->name . ' 发布到 ' . $this->pushDriver->name)); ?>
                             </div>
                         </div>
 
@@ -187,16 +187,16 @@
                             <div class="be-col">
                                 <div class="be-row be-mt:50">
                                     <div class="be-col-auto be-lh-250">
-                                        <el-radio :disabled="field.is_enable === 0" v-model="field.value_type" label="pull_task_field">采集任务字段</el-radio>
+                                        <el-radio :disabled="field.is_enable === 0" v-model="field.value_type" label="pull_driver_field">采集器字段</el-radio>
                                     </div>
-                                    <div class="be-col-auto be-lh-250" v-if="field.value_type === 'pull_task_field'">：</div>
-                                    <div class="be-col-auto" v-if="field.value_type === 'pull_task_field'">
-                                        <el-select :disabled="field.is_enable === 0" v-model="field.value_pull_task_field" size="medium" placeholder="请选择" filterable>
+                                    <div class="be-col-auto be-lh-250" v-if="field.value_type === 'pull_driver_field'">：</div>
+                                    <div class="be-col-auto" v-if="field.value_type === 'pull_driver_field'">
+                                        <el-select :disabled="field.is_enable === 0" v-model="field.value_pull_driver_field" size="medium" placeholder="请选择" filterable>
                                             <el-option
-                                                    v-for="pullTaskField in pullTask.fields"
-                                                    :key="pullTaskField.name"
-                                                    :label="pullTaskField.name"
-                                                    :value="pullTaskField.name">
+                                                    v-for="pullDriverField in pullDriver.fields"
+                                                    :key="pullDriverField.name"
+                                                    :label="pullDriverField.name"
+                                                    :value="pullDriverField.name">
                                             </el-option>
                                         </el-select>
                                     </div>
@@ -255,15 +255,15 @@
                                 } else {
                                     $field['value_type'] = 'default';
                                 }
-                                $field['value_pull_task_field'] = '';
+                                $field['value_pull_driver_field'] = '';
 
                                 $field['value_default'] = $pushDriverField['default'];
                                 $field['value_custom'] = '';
 
-                                foreach ($this->pullTask->fields as $pullTaskField) {
-                                    if ($pullTaskField['name'] === $pushDriverField['name'] || $pullTaskField['name'] === $pushDriverField['label']) {
-                                        $field['value_type'] = 'pull_task_field';
-                                        $field['value_pull_task_field'] = $pullTaskField['name'];
+                                foreach ($this->pullDriver->fields as $pullDriverField) {
+                                    if ($pullDriverField['name'] === $pushDriverField['name'] || $pullDriverField['name'] === $pushDriverField['label']) {
+                                        $field['value_type'] = 'pull_driver_field';
+                                        $field['value_pull_driver_field'] = $pullDriverField['name'];
                                         break;
                                     }
                                 }
@@ -333,7 +333,7 @@
                 loading: false,
 
                 pushDriver: <?php echo json_encode($this->pushDriver); ?>,
-                pullTask: <?php echo json_encode($this->pullTask); ?>,
+                pullDriver: <?php echo json_encode($this->pullDriver); ?>,
 
                 t: false
                 <?php

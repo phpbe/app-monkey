@@ -151,17 +151,17 @@ class PullDriver extends Auth
                             ],
                         ],
                         [
-                            'name' => 'task_count',
-                            'label' => '采集任务数',
+                            'name' => 'content_count',
+                            'label' => '采集的内容',
                             'align' => 'center',
-                            'width' => '90',
+                            'width' => '120',
                             'driver' => TableItemLink::class,
                             'value' => function ($row) {
-                                $sql = 'SELECT COUNT(*) FROM monkey_pull_task WHERE pull_driver_id = ?';
+                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_driver_id = ?';
                                 $count = Be::getDb()->getValue($sql, [$row['id']]);
                                 return $count;
                             },
-                            'action' => 'showPullTasks',
+                            'action' => 'showContents',
                             'target' => 'self',
                         ],
                         [
@@ -203,16 +203,31 @@ class PullDriver extends Auth
                         'items' => [
                             [
                                 'label' => '',
-                                'tooltip' => '创建采集任务',
-                                'action' => 'createPullTask',
-                                'target' => 'self',
+                                'tooltip' => '安装',
+                                'action' => 'install',
+                                'target' => 'blank',
                                 'ui' => [
                                     'type' => 'success',
                                     ':underline' => 'false',
                                     'style' => 'font-size: 20px;',
+                                    ':disabled' => 'scope.row.is_enable !== \'1\'',
                                 ],
                                 'icon' => 'el-icon-plus',
-                            ],[
+                            ],
+                            [
+                                'label' => '',
+                                'tooltip' => '启动',
+                                'action' => 'run',
+                                'target' => 'blank',
+                                'ui' => [
+                                    'type' => 'warning',
+                                    ':underline' => 'false',
+                                    'style' => 'font-size: 20px;',
+                                    ':disabled' => 'scope.row.is_enable !== \'1\'',
+                                ],
+                                'icon' => 'bi-caret-right-square',
+                            ],
+                            [
                                 'label' => '',
                                 'tooltip' => '编辑',
                                 'action' => 'edit',
@@ -404,11 +419,11 @@ class PullDriver extends Auth
     }
 
     /**
-     * 查看采集任务
+     * 安装脚本
      *
      * @BePermission("*")
      */
-    public function showPullTasks()
+    public function install()
     {
         $request = Be::getRequest();
         $response = Be::getResponse();
@@ -417,17 +432,46 @@ class PullDriver extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.PullTask.pullTasks', ['pull_driver_id' => $postData['row']['id']]));
+                //$response->redirect(beUrl('Monkey.PullDriver.install', ['id' => $postData['row']['id']]));
+
+                $response->write('<meta charset="utf-8" />');
+                $response->write('如果您已安装油猴插件，将自动弹出安装/更新油猴脚本界面，如果未弹出，请检查浏览器扩展！');
+                $response->write('<script>');
+                $response->write('window.location.href="' . beUrl('Monkey.PullDriver.install', ['id' => $postData['row']['id']]) . '";');
+                $response->write( '</script>');
+            }
+        }
+    }
+
+
+    /**
+     * 开始采集
+     *
+     * @BePermission("*")
+     */
+    public function run()
+    {
+        $request = Be::getRequest();
+        $response = Be::getResponse();
+
+        $postData = $request->post('data', '', '');
+        if ($postData) {
+            $postData = json_decode($postData, true);
+            if (isset($postData['row']['id']) && $postData['row']['id']) {
+                $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($postData['row']['id']);
+                $response->set('pullDriver', $pullDriver);
+                $response->set('title', '即将开始采集');
+                $response->display();
             }
         }
     }
 
     /**
-     * 创建采集任务
+     * 查看采集的内容
      *
      * @BePermission("*")
      */
-    public function createPullTask()
+    public function showContents()
     {
         $request = Be::getRequest();
         $response = Be::getResponse();
@@ -436,7 +480,7 @@ class PullDriver extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.PullTask.create', ['pull_driver_id' => $postData['row']['id']]));
+                $response->redirect(beAdminUrl('Monkey.Content.contents', ['pull_driver_id' => $postData['row']['id']]));
             }
         }
     }

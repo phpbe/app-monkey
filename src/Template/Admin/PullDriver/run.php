@@ -51,7 +51,7 @@
 
             <div class="be-fs-110 be-fw-bold">通过浏览器访问以下网址进行采集操作：</div>
 
-            <el-tag class="be-mt-100"><?php echo $this->pullTask->start_page; ?></el-tag>
+            <el-tag class="be-mt-100"><?php echo $this->pullDriver->start_page; ?></el-tag>
 
             <div class="be-mt-200 be-c-999">
                 请先确认您已安装了了以下内容 ：
@@ -60,14 +60,14 @@
                         浏览器油猴插件。<el-link type="primary" href="https://www.phpbe.com/app-monkey/doc/tampe-rmonkey">安装教程</el-link>
                     </li>
                     <li>
-                        任务（<?php echo $this->pullTask->name; ?>）的采集脚本：
-                        <el-link type="primary" href="<?php echo $this->pullTask->start_page; ?>">安装</el-link>
+                        采集器（<?php echo $this->pullDriver->name; ?>）的采集脚本：
+                        <el-link type="primary" href="<?php echo $this->pullDriver->start_page; ?>">安装</el-link>
                     </li>
                 </ol>
             </div>
 
             <div class="be-mt-200">
-                <a class="be-btn be-btn-main" type="primary" href="<?php echo $this->pullTask->start_page; ?>" rel="noreferrer">
+                <a class="be-btn be-btn-main" type="primary" href="<?php echo $this->pullDriver->start_page; ?>" rel="noreferrer">
                     <i class="el-icon-video-play"></i> 打开该页面进行采集
                 </a>
             </div>
@@ -102,7 +102,7 @@
 
                 cancel: function () {
                     window.onbeforeunload = null;
-                    window.location.href = "<?php echo beAdminUrl('Monkey.PullTask.pullTasks'); ?>";
+                    window.location.href = "<?php echo beAdminUrl('Monkey.PullDriver.pullDrivers'); ?>";
                 },
 
                 <?php

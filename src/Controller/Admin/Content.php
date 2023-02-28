@@ -25,7 +25,7 @@ class Content extends Auth
      */
     public function contents()
     {
-        $pullTaskKeyValues = Be::getService('App.Monkey.Admin.PullTask')->getPullTaskKeyValues();
+        $pullDriverKeyValues = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriverKeyValues();
 
         Be::getAdminPlugin('Curd')->setting([
 
@@ -45,27 +45,13 @@ class Content extends Auth
                             'label' => '标题',
                         ],
                         [
-                            'name' => 'pull_task_id',
-                            'label' => '采集任务',
+                            'name' => 'pull_driver_id',
+                            'label' => '采集器',
                             'driver' => FormItemSelect::class,
-                            'keyValues' => $pullTaskKeyValues,
-                            'value' => Be::getRequest()->get('pull_task_id'),
+                            'keyValues' => $pullDriverKeyValues,
+                            'value' => Be::getRequest()->get('pull_driver_id'),
                         ],
                     ],
-                ],
-
-                'titleRightToolbar' => [
-                    'items' => [
-                        [
-                            'label' => '新建采集任务',
-                            'action' => 'create',
-                            'target' => 'self', // 'ajax - ajax请求 / dialog - 对话框窗口 / drawer - 抽屉 / self - 当前页面 / blank - 新页面'
-                            'ui' => [
-                                'icon' => 'el-icon-plus',
-                                'type' => 'primary',
-                            ]
-                        ],
-                    ]
                 ],
 
                 'tableToolbar' => [
@@ -93,15 +79,13 @@ class Content extends Auth
                             'width' => '50',
                         ],
                         [
-                            'name' => 'task_name',
-                            'label' => '采集任务名称',
+                            'name' => 'pull_driver_name',
+                            'label' => '采集器名称',
                             'width' => '250',
                             'align' => 'left',
-                            'value' => function ($row) {
-                                $sql = 'SELECT `name` FROM monkey_pull_task WHERE id = ?';
-                                $pullTaskName = Be::getDb()->getValue($sql, [$row['pull_task_id']]);
-                                if ($pullTaskName) {
-                                    return $pullTaskName;
+                            'value' => function ($row) use ($pullDriverKeyValues) {
+                                if (isset($pullDriverKeyValues[$row['pull_driver_id']])) {
+                                    return $pullDriverKeyValues[$row['pull_driver_id']];
                                 } else {
                                     return '-';
                                 }
@@ -160,7 +144,7 @@ class Content extends Auth
 
 
     /**
-     * 查看采集任务
+     * 查看采集的内容
      *
      * @BePermission("内容详情")
      */
