@@ -10,7 +10,7 @@ class Content
     /**
      * 接收器
      *
-     * @BeRoute("/content/receive")
+     * @BeRoute("/monkey/content/receive")
      */
     public function receive()
     {

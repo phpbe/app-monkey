@@ -47,7 +47,7 @@ class PullTask
     public function getPullTaskInstallUrl(array $params = []): string
     {
         $pullTask = $this->getPullTask($params['id']);
-        return '/pull-task/' . $pullTask->id.'.user.js';
+        return '/monkey/pull-task/' . $pullTask->id.'.user.js';
     }
 
 
