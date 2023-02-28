@@ -5,6 +5,7 @@ namespace Be\App\Monkey\Service\Admin;
 use Be\App\ServiceException;
 use Be\Be;
 
+
 class PullTask
 {
 
@@ -283,6 +284,8 @@ class PullTask
 
             $db->commit();
 
+            $this->makeJsFile($tuplePullTask->id);
+
         } catch (\Throwable $t) {
             $db->rollback();
             Be::getLog()->error($t);
@@ -293,5 +296,26 @@ class PullTask
         return $tuplePullTask->toObject();
     }
 
+    /**
+     * 生成实例JS 文件
+     * @return void
+     */
+    private function makeJsFile($pullTaskId) {
+        $response = Be::getResponse();
+        $pullTask = Be::getService('App.Monkey.PullTask')->getPullTask($pullTaskId);
+        $response->set('pullTask', $pullTask);
+
+        $code = $response->fetch('App.Monkey.PullTask.install');
+        $path = Be::getRuntime()->getRootPath() . '/www/monkey/pull-task/' . $pullTaskId.'.user.js';
+
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+            @chmod($dir, 0777);
+        }
+
+        file_put_contents($path, $code, LOCK_EX);
+        @chmod($path, 0777);
+    }
 
 }
