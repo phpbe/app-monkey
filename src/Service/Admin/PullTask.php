@@ -306,7 +306,7 @@ class PullTask
         $response->set('pullTask', $pullTask);
 
         $code = $response->fetch('App.Monkey.PullTask.install');
-        $path = Be::getRuntime()->getRootPath() . '/www/monkey/pull-task/' . $pullTaskId.'.user.js';
+        $path = Be::getRuntime()->getRootPath() . '/www/monkey/pull-task/' . $pullTaskId . '-v' . $pullTask->version.'.user.js';
 
         $dir = dirname($path);
         if (!is_dir($dir)) {
