@@ -295,9 +295,7 @@
                                 <td>间隔时间（毫秒）：</td>
                                 <td>
                                     <el-form-item prop="interval">
-                                        <el-form-item prop="ordering">
-                                            <el-input-number v-model="formData.interval"></el-input-number>
-                                        </el-form-item>
+                                        <el-input-number v-model="formData.interval"></el-input-number>
                                     </el-form-item>
                                     <?php $formData['interval'] = ($this->pushTask ? $this->pushTask->interval : $this->pushDriver->interval); ?>
                                 </td>
