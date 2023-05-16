@@ -375,7 +375,7 @@ BeMonkey = {
     // 采集链接页面
     processLink: function () {
 
-        this.status("采集第链接...");
+        this.status("采集链接内容...");
 
         if (this.links.length > 0) {
 
