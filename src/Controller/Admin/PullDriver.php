@@ -199,7 +199,7 @@ class PullDriver extends Auth
                     ],
                     'operation' => [
                         'label' => '操作',
-                        'width' => '120',
+                        'width' => '180',
                         'items' => [
                             [
                                 'label' => '',

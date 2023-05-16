@@ -37,18 +37,21 @@ class PullDriver
         return $pullDriver;
     }
 
-
     /**
      * 获取采集器安装网址
      *
      * @param array $params
-     * @return string
+     * @return array
      */
-    public function getPullDriverInstallUrl(array $params = []): string
+    public function getPullDriverInstallUrl(array $params = []): array
     {
         $pullDriver = $this->getPullDriver($params['id']);
-        return '/monkey/pull-driver/' . $pullDriver->id . '-v' . $pullDriver->version . '.user.js';
+
+        $params1 = ['id' => $params['id']];
+        unset($params['id']);
+        return ['/monkey/pull-driver/' . $pullDriver->id . '-v' . $pullDriver->version . '.user.js', $params1, $params];
     }
+
 
 
 }
