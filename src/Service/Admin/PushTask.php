@@ -120,10 +120,6 @@ class PushTask
             throw new ServiceException('参数（push_driver_id）缺失！');
         }
 
-        if (!isset($data['pull_task_id']) || !is_string($data['pull_task_id']) || $data['pull_task_id'] === '') {
-            throw new ServiceException('参数（pull_task_id）缺失！');
-        }
-
         $tuplePushTask = Be::getTuple('monkey_push_task');
         if (!$isNew) {
             try {
@@ -138,10 +134,6 @@ class PushTask
 
             if ($tuplePushTask->push_driver_id !== $data['push_driver_id']) {
                 throw new ServiceException('参数（push_driver_id）错误！');
-            }
-
-            if ($tuplePushTask->pull_task_id !== $data['pull_task_id']) {
-                throw new ServiceException('参数（pull_task_id）错误！');
             }
         }
 
@@ -158,20 +150,6 @@ class PushTask
 
         $tuplePushDriver->headers = unserialize($tuplePushDriver->headers);
         $tuplePushDriver->fields = unserialize($tuplePushDriver->fields);
-
-
-        $tuplePullTask = Be::getTuple('monkey_pull_task');
-        try {
-            $tuplePullTask->load($data['pull_task_id']);
-        } catch (\Throwable $t) {
-            throw new ServiceException('采集任务（# ' . $data['pull_task_id'] . '）不存在！');
-        }
-
-        if ($tuplePullTask->is_delete === 1) {
-            throw new ServiceException('采集任务（# ' . $data['pull_task_id'] . '）不存在！');
-        }
-
-        $tuplePullTask->fields = unserialize($tuplePullTask->fields);
 
         if (!isset($data['name']) || !is_string($data['name'])) {
             throw new ServiceException('发布任务名称未填写！');
@@ -320,13 +298,13 @@ class PushTask
                 throw new ServiceException('第' . $i . '个发布字段类型缺失！');
             }
 
-            if (!in_array($field['value_type'], ['pull_task_field', 'default', 'custom'])) {
+            if (!in_array($field['value_type'], ['pull_driver_field', 'default', 'custom'])) {
                 throw new ServiceException('第' . $i . '个发布字段类型无法识别！');
             }
 
             switch ($field['value_type']) {
-                case 'pull_task_field':
-                    if (!isset($field['value_pull_task_field']) || !is_string($field['value_pull_task_field'])) {
+                case 'pull_driver_field':
+                    if (!isset($field['value_pull_driver_field']) || !is_string($field['value_pull_driver_field'])) {
                         throw new ServiceException('第' . $i . '个发布字段值未选择！');
                     }
 
@@ -338,7 +316,7 @@ class PushTask
                         throw new ServiceException('第' . $i . '个发布字段默认值缺失！');
                     }
 
-                    $field['value_pull_task_field'] = '';
+                    $field['value_pull_driver_field'] = '';
                     $field['value_custom'] = '';
                     break;
                 case 'custom':
@@ -346,7 +324,7 @@ class PushTask
                         throw new ServiceException('第' . $i . '个发布字段自定义值未填写！');
                     }
 
-                    $field['value_pull_task_field'] = '';
+                    $field['value_pull_driver_field'] = '';
                     $field['value_default'] = '';
                     break;
             }
@@ -359,7 +337,7 @@ class PushTask
                 'default' => $field['default'],
                 'required' => $field['required'],
                 'value_type' => $field['value_type'],
-                'value_pull_task_field' => $field['value_pull_task_field'],
+                'value_pull_driver_field' => $field['value_pull_driver_field'],
                 'value_default' => $field['value_default'],
                 'value_custom' => $field['value_custom'],
             ];
@@ -407,7 +385,6 @@ class PushTask
         try {
             $now = date('Y-m-d H:i:s');
             $tuplePushTask->push_driver_id = $data['push_driver_id'];
-            $tuplePushTask->pull_task_id = $data['pull_task_id'];
             $tuplePushTask->name = $data['name'];
             $tuplePushTask->url = $data['url'];
             $tuplePushTask->headers = serialize($data['headers']);
