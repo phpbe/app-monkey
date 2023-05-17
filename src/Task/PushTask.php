@@ -22,7 +22,7 @@ class PushTask extends Task
     {
 
         $db = Be::getDb();
-        $sql = 'SELECT * FROM monkey_push_task WHERE is_enable = 1 AND is_delete = 0 AND status = \'prepared\'';
+        $sql = 'SELECT * FROM monkey_push_task WHERE is_enable = 1 AND is_delete = 0 AND status = \'pending\'';
         $pushTask = $db->getObject($sql);
         if ($pushTask) {
 
@@ -112,7 +112,7 @@ class PushTask extends Task
                     }
                 }
 
-                $sql = 'UPDATE monkey_push_task SET status=\'completed\', message=\'\', update_time = \'' . date('Y-m-d H:i:s') . '\' WHERE id=\'' . $pushTask->id . '\'';
+                $sql = 'UPDATE monkey_push_task SET status=\'finish\', message=\'\', update_time = \'' . date('Y-m-d H:i:s') . '\' WHERE id=\'' . $pushTask->id . '\'';
                 $db->query($sql);
 
             } catch (\Throwable $t) {

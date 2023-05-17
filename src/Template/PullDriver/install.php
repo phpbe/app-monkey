@@ -169,7 +169,7 @@ BeMonkey = {
                     this.processLink();
                 }
                 break;
-            case "complete":
+            case "finish":
                 this.status("采集完成！");
                 break;
         }
@@ -370,7 +370,7 @@ BeMonkey = {
                     window.location.href = _this.currentPage;
                 }, <?php echo $this->pullDriver->interval; ?>);
             } else {
-                this.complete();
+                this.finish();
             }
         }
     },
@@ -485,7 +485,7 @@ BeMonkey = {
                                 window.location.href = _this.currentPage;
                             }, <?php echo $this->pullDriver->interval; ?>);
                         } else {
-                            _this.complete();
+                            _this.finish();
                         }
                     }
                 }
@@ -509,7 +509,7 @@ BeMonkey = {
                     window.location.href = _this.currentPage;
                 }, <?php echo $this->pullDriver->interval; ?>);
             } else {
-                this.complete();
+                this.finish();
             }
         }
     },
@@ -605,17 +605,17 @@ BeMonkey = {
                     window.location.href = _this.currentPage;
                 }, <?php echo $this->pullDriver->interval; ?>);
             } else {
-                this.complete();
+                this.finish();
             }
         }
     },
 
-    complete: function () {
+    finish: function () {
         this.running = 0;
         localStorage.setItem("be:monkey:running", 0);
 
-        this.step = "complete";
-        localStorage.setItem("be:monkey:step", "complete");
+        this.step = "finish";
+        localStorage.setItem("be:monkey:step", "finish");
 
         this.endTime = this.getDateTime();
         localStorage.setItem("be:monkey:endTime", this.endTime);

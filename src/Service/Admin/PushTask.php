@@ -120,6 +120,10 @@ class PushTask
             throw new ServiceException('参数（push_driver_id）缺失！');
         }
 
+        if (!isset($data['pull_driver_id']) || !is_string($data['pull_driver_id']) || $data['pull_driver_id'] === '') {
+            throw new ServiceException('参数（pull_driver_id）缺失！');
+        }
+
         $tuplePushTask = Be::getTuple('monkey_push_task');
         if (!$isNew) {
             try {
@@ -134,6 +138,10 @@ class PushTask
 
             if ($tuplePushTask->push_driver_id !== $data['push_driver_id']) {
                 throw new ServiceException('参数（push_driver_id）错误！');
+            }
+
+            if ($tuplePushTask->pull_driver_id !== $data['pull_driver_id']) {
+                throw new ServiceException('参数（pull_driver_id）错误！');
             }
         }
 
@@ -150,6 +158,18 @@ class PushTask
 
         $tuplePushDriver->headers = unserialize($tuplePushDriver->headers);
         $tuplePushDriver->fields = unserialize($tuplePushDriver->fields);
+
+
+        $tuplePullDriver = Be::getTuple('monkey_pull_driver');
+        try {
+            $tuplePullDriver->load($data['pull_driver_id']);
+        } catch (\Throwable $t) {
+            throw new ServiceException('采集器（# ' . $data['pull_driver_id'] . '）不存在！');
+        }
+
+        if ($tuplePullDriver->is_delete === 1) {
+            throw new ServiceException('采集器（# ' . $data['pull_driver_id'] . '）不存在！');
+        }
 
         if (!isset($data['name']) || !is_string($data['name'])) {
             throw new ServiceException('发布任务名称未填写！');
@@ -385,6 +405,7 @@ class PushTask
         try {
             $now = date('Y-m-d H:i:s');
             $tuplePushTask->push_driver_id = $data['push_driver_id'];
+            $tuplePushTask->pull_driver_id = $data['pull_driver_id'];
             $tuplePushTask->name = $data['name'];
             $tuplePushTask->url = $data['url'];
             $tuplePushTask->headers = serialize($data['headers']);
@@ -394,7 +415,7 @@ class PushTask
             $tuplePushTask->is_enable = $data['is_enable'];
             $tuplePushTask->update_time = $now;
             if ($isNew) {
-                $tuplePushTask->status = 'created';
+                $tuplePushTask->status = 'create';
                 $tuplePushTask->is_delete = 0;
                 $tuplePushTask->create_time = $now;
                 $tuplePushTask->insert();
@@ -439,7 +460,7 @@ class PushTask
             $sql = 'DELETE FROM monkey_push_task_log WHERE push_task_id=?';
             $db->query($sql, [$pushTaskId]);
 
-            $tuplePushTask->status = 'prepared';
+            $tuplePushTask->status = 'pending';
             $tuplePushTask->update_time = date('Y-m-d H:i:s');
             $tuplePushTask->update();
 

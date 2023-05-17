@@ -66,7 +66,7 @@ CREATE TABLE `monkey_push_task` (
 `fields` text NOT NULL COMMENT '字段',
 `interval` int(11) NOT NULL DEFAULT '1000' COMMENT '间隔时间（毫秒）',
 `ordering` int(11) NOT NULL DEFAULT '0' COMMENT '排序',
-`status` varchar(30) NOT NULL DEFAULT 'created' COMMENT '状态（created - 新建 / runing - 动行中 / completed - 完成）',
+`status` varchar(30) NOT NULL DEFAULT 'create' COMMENT '状态（create - 新建 / running - 动行中 / finish - 完成）',
 `message` varchar(500) NOT NULL DEFAULT '' COMMENT '信息',
 `is_enable` tinyint(4) NOT NULL DEFAULT '1' COMMENT '是否启用',
 `is_delete` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否已删除',

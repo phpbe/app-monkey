@@ -150,13 +150,13 @@ class PushTask extends Auth
                             'width' => '120',
                             'value' =>  function ($row) {
                                 switch ($row['status']) {
-                                    case 'created':
+                                    case 'create':
                                         return '新建';
-                                    case 'prepared':
+                                    case 'pending':
                                         return '即将运行';
                                     case 'running':
                                         return '运行中';
-                                    case 'completed':
+                                    case 'finish':
                                         return '执行完成';
                                     case 'error':
                                         return '执行出错';
@@ -233,7 +233,7 @@ class PushTask extends Auth
                                     'type' => 'warning',
                                     ':underline' => 'false',
                                     'style' => 'font-size: 20px;',
-                                    ':disabled' => 'scope.row.is_enable !== \'1\' || scope.row.status === \'prepared\' || scope.row.status === \'running\'',
+                                    ':disabled' => 'scope.row.is_enable !== \'1\' || scope.row.status === \'pending\' || scope.row.status === \'running\'',
                                 ],
                                 'icon' => 'bi-caret-right-square',
                             ],
@@ -322,13 +322,13 @@ class PushTask extends Auth
                             'label' => '状态描述',
                             'value' => function($row) {
                                 switch ($row['status']) {
-                                    case 'created':
+                                    case 'create':
                                         return '新建';
-                                    case 'prepared':
+                                    case 'pending':
                                         return '即将运行';
                                     case 'running':
                                         return '运行中';
-                                    case 'completed':
+                                    case 'finish':
                                         return '执行完成';
                                     case 'error':
                                         return '执行出错';
