@@ -187,9 +187,12 @@ BeMonkey = {
         if (this.running === 0) {
             sHtml += '<input type="button" value="' + (this.step === 'init' ? '开如采集' : '重新采集') + '" onclick="BeMonkey.start();">';
         } else if (this.running === 1) {
-            sHtml += '<input type="button" value="暂停采集" onclick="BeMonkey.pause();"> <input type="button" value="终止采集" onclick="BeMonkey.stop();">';
+            sHtml += '<input type="button" value="暂停采集" onclick="BeMonkey.pause();"> ';
+            sHtml += '<input type="button" value="终止采集" onclick="BeMonkey.stop();"> ';
+            sHtml += '<input type="button" value="跳过本页" onclick="BeMonkey.jump();"> ';
         } else if (this.running === -1) {
-            sHtml += '<input type="button" value="继续采集" onclick="BeMonkey.continue();"> <input type="button" value="终止采集" onclick="BeMonkey.stop();">';
+            sHtml += '<input type="button" value="继续采集" onclick="BeMonkey.continue();"> ';
+            sHtml += '<input type="button" value="终止采集" onclick="BeMonkey.stop();">';
         }
         sHtml += '</div>';
 
@@ -550,6 +553,7 @@ BeMonkey = {
         window.location.reload();
     },
 
+
     continue: function () {
         this.running = 1;
         localStorage.setItem("be:monkey:running", 1);
@@ -565,6 +569,45 @@ BeMonkey = {
         localStorage.setItem("be:monkey:step", "init");
 
         window.location.reload();
+    },
+
+    jump: function () {
+
+        this.links.shift();
+        localStorage.setItem('be:monkey:links', this.links.join("|"));
+
+        if (this.links.length > 0) {
+            this.step = "link";
+            localStorage.setItem("be:monkey:step", "link");
+
+            this.status("当前链接采集完成");
+
+            let _this = this;
+            setTimeout(function () {
+                window.location.href = _this.links[0];
+            }, <?php echo $this->pullDriver->interval; ?>);
+        } else {
+            if (this.nextPage) {
+                this.currentPage = this.nextPage;
+                localStorage.setItem("be:monkey:currentPage", this.currentPage);
+
+                this.nextPage = false;
+                localStorage.removeItem("be:monkey:nextPage");
+
+                this.step = "page";
+                localStorage.setItem("be:monkey:step", "page");
+
+                // 分页页面未采集到链接
+                this.status("当前分页所有链接采集完成，前往下页...");
+
+                let _this = this;
+                setTimeout(function () {
+                    window.location.href = _this.currentPage;
+                }, <?php echo $this->pullDriver->interval; ?>);
+            } else {
+                this.complete();
+            }
+        }
     },
 
     complete: function () {
