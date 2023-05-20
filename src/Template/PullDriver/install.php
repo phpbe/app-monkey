@@ -676,7 +676,7 @@ $(function () {
 
 setTimeout(function (){
     window.location.reload();
-}, 600);
+}, 600000);
 
 <?php if (false) { ?>
 </script>
