@@ -558,7 +558,13 @@ BeMonkey = {
         this.running = 1;
         localStorage.setItem("be:monkey:running", 1);
 
-        window.location.reload();
+        //window.location.reload();
+
+        if (this.step === "link"  && this.links.length > 0) {
+            window.location.href = this.links[0];
+        } else {
+            window.location.href = this.currentPage;
+        }
     },
 
     stop: function () {
@@ -572,20 +578,13 @@ BeMonkey = {
     },
 
     jump: function () {
-
         this.links.shift();
         localStorage.setItem('be:monkey:links', this.links.join("|"));
 
         if (this.links.length > 0) {
             this.step = "link";
             localStorage.setItem("be:monkey:step", "link");
-
-            this.status("当前链接采集完成");
-
-            let _this = this;
-            setTimeout(function () {
-                window.location.href = _this.links[0];
-            }, <?php echo $this->pullDriver->interval; ?>);
+            window.location.href = this.links[0];
         } else {
             if (this.nextPage) {
                 this.currentPage = this.nextPage;
@@ -596,14 +595,7 @@ BeMonkey = {
 
                 this.step = "page";
                 localStorage.setItem("be:monkey:step", "page");
-
-                // 分页页面未采集到链接
-                this.status("当前分页所有链接采集完成，前往下页...");
-
-                let _this = this;
-                setTimeout(function () {
-                    window.location.href = _this.currentPage;
-                }, <?php echo $this->pullDriver->interval; ?>);
+                window.location.href = this.currentPage;
             } else {
                 this.finish();
             }
