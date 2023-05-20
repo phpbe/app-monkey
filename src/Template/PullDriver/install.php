@@ -674,6 +674,10 @@ $(function () {
     BeMonkey.init();
 });
 
+setTimeout(function (){
+    window.location.reload();
+}, 600);
+
 <?php if (false) { ?>
 </script>
 <?php } ?>
