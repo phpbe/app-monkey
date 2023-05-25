@@ -8,14 +8,15 @@ use Be\AdminPlugin\Detail\Item\DetailItemToggleIcon;
 use Be\AdminPlugin\Table\Item\TableItemImage;
 use Be\AdminPlugin\Table\Item\TableItemLink;
 use Be\AdminPlugin\Form\Item\FormItemSelect;
+use Be\AdminPlugin\Table\Item\TableItemProgress;
 use Be\AdminPlugin\Table\Item\TableItemSelection;
 use Be\AdminPlugin\Table\Item\TableItemSwitch;
+use Be\AdminPlugin\Table\Item\TableItemToggleTag;
 use Be\App\System\Controller\Admin\Auth;
 use Be\Be;
 
 /**
- * @BeMenuGroup("发布")
- * @BePermissionGroup("发布")
+ * @BePermissionGroup("发布器")
  */
 class PushDriver extends Auth
 {
@@ -142,6 +143,64 @@ class PushDriver extends Auth
                             ],
                         ],
                         [
+                            'name' => 'status_desc',
+                            'label' => '状态',
+                            'align' => 'center',
+                            'width' => '120',
+                            'value' =>  function ($row) {
+                                switch ($row['status']) {
+                                    case 'create':
+                                        return '新建';
+                                    case 'pending':
+                                        return '即将运行';
+                                    case 'running':
+                                        return '运行中';
+                                    case 'finish':
+                                        return '执行完成';
+                                    case 'error':
+                                        return '执行出错';
+                                    default:
+                                        return '-';
+                                }
+                            },
+                        ],
+                        [
+                            'name' => 'total',
+                            'label' => '总计',
+                            'width' => '90',
+                            'value' =>  function ($row) {
+                                $sql = 'SELECT COUNT(*) FROM monkey_content WHERE pull_driver_id = ?';
+                                $count = (int)Be::getDb()->getValue($sql, [$row['pull_driver_id']]);
+                                return $count;
+                            },
+                        ],
+                        [
+                            'name' => 'pushed',
+                            'label' => '已发布',
+                            'driver' => TableItemLink::class,
+                            'action' => 'goPushDriverLog',
+                            'target' => 'blank',
+                            'width' => '90',
+                            'value' =>  function ($row) {
+                                $sql = 'SELECT COUNT(DISTINCT content_id) FROM monkey_push_driver_log WHERE push_driver_id = ?';
+                                $count = (int)Be::getDb()->getValue($sql, [$row['id']]);
+                                return $count;
+                            },
+                        ],
+                        [
+                            'name' => 'process',
+                            'label' => '进度',
+                            'width' => '120',
+                            'driver' => TableItemProgress::class,
+                            'value' =>  function ($row) {
+                                if ($row['total'] === 0) {
+                                    return 0;
+                                } else {
+                                    return round($row['pushed'] * 100 / $row['total'], 1);
+                                }
+                            },
+                        ],
+                        [
                             'name' => 'ordering',
                             'label' => '排序',
                             'width' => '80',
@@ -165,15 +224,17 @@ class PushDriver extends Auth
                         'items' => [
                             [
                                 'label' => '',
-                                'tooltip' => '创建发布任务',
-                                'action' => 'createPushTask',
-                                'target' => 'self',
+                                'tooltip' => '启动',
+                                'action' => 'run',
+                                'target' => 'ajax',
+                                'confirm' => '确认要启动么？',
                                 'ui' => [
-                                    'type' => 'success',
+                                    'type' => 'warning',
                                     ':underline' => 'false',
                                     'style' => 'font-size: 20px;',
+                                    ':disabled' => 'scope.row.is_enable !== \'1\' || scope.row.status === \'pending\' || scope.row.status === \'running\'',
                                 ],
-                                'icon' => 'el-icon-plus',
+                                'icon' => 'bi-caret-right-square',
                             ],
                             [
                                 'label' => '',
@@ -252,6 +313,34 @@ class PushDriver extends Auth
                             'label' => '排序',
                         ],
                         [
+                            'name' => 'status',
+                            'label' => '状态',
+                        ],
+                        [
+                            'name' => 'status_desc',
+                            'label' => '状态描述',
+                            'value' => function($row) {
+                                switch ($row['status']) {
+                                    case 'create':
+                                        return '新建';
+                                    case 'pending':
+                                        return '即将运行';
+                                    case 'running':
+                                        return '运行中';
+                                    case 'finish':
+                                        return '执行完成';
+                                    case 'error':
+                                        return '执行出错';
+                                    default:
+                                        return '-';
+                                }
+                            }
+                        ],
+                        [
+                            'name' => 'message',
+                            'label' => '消息',
+                        ],
+                        [
                             'name' => 'is_enable',
                             'label' => '启用/禁用',
                             'driver' => DetailItemToggleIcon::class,
@@ -274,12 +363,14 @@ class PushDriver extends Auth
     /**
      * 新建发布器
      *
-     * @BePermission("新建", ordering="1.21")
+     * @BePermission("新建", ordering="3.21")
      */
     public function create()
     {
         $request = Be::getRequest();
         $response = Be::getResponse();
+
+        $pullDriverId = $request->get('pull_driver_id', '');
 
         if ($request->isAjax()) {
             try {
@@ -293,19 +384,34 @@ class PushDriver extends Auth
                 $response->json();
             }
         } else {
-            $response->set('pushDriver', false);
+            if ($pullDriverId === '') {
+                $pullDrivers = Be::getService('App.Monkey.Admin.PullDriver')->getEnabledPullDrivers();
+                $serviceContent = Be::getService('App.Monkey.Admin.Content');
+                foreach ($pullDrivers as $pullDriver) {
+                    $pullDriver->content_count = $serviceContent->getPullDriverContentCount($pullDriver->id);
+                }
+                $response->set('pullDrivers', $pullDrivers);
+                $response->set('pullDriverId', $pullDriverId);
 
-            $response->set('title', '新建发布器');
+                $response->set('title', '新建发布器');
+                $response->display();
+            } else {
+                $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pullDriverId);
+                $response->set('pullDriver', $pullDriver);
+                $response->set('pullDriverId', $pullDriverId);
 
-            //$response->display();
-            $response->display('App.Monkey.Admin.PushDriver.edit');
+                $response->set('pushDriver', false);
+
+                $response->set('title', '新建发布器');
+                $response->display('App.Monkey.Admin.PushDriver.edit');
+            }
         }
     }
 
     /**
      * 编辑
      *
-     * @BePermission("编辑", ordering="1.22")
+     * @BePermission("编辑", ordering="3.22")
      */
     public function edit()
     {
@@ -336,18 +442,41 @@ class PushDriver extends Auth
             $pushDriver = Be::getService('App.Monkey.Admin.PushDriver')->getPushDriver($pushDriverId);
             $response->set('pushDriver', $pushDriver);
 
+            $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->getPullDriver($pushDriver->pull_driver_id);
+            $response->set('pullDriver', $pullDriver);
+
             $response->set('title', '编辑发布器');
 
             $response->display();
         }
     }
 
+
+
     /**
-     * 查看发布任务
+     * 发布器 - 启动
      *
-     * @BePermission("*")
+     * @BePermission("发布器 - 启动", ordering="3.33")
      */
-    public function showPushTasks()
+    public function run()
+    {
+        $request = Be::getRequest();
+        $response = Be::getResponse();
+
+        $pushDriverId = $request->json('row.id');
+        if ($pushDriverId) {
+            Be::getService('App.Monkey.Admin.PushDriver')->run($pushDriverId);
+            $response->success('发布器已启动');
+        }
+    }
+
+
+    /**
+     * 发布器 - 日志
+     *
+     * @BePermission("发布器 - 日志", ordering="3.34")
+     */
+    public function goPushDriverLog()
     {
         $request = Be::getRequest();
         $response = Be::getResponse();
@@ -356,28 +485,183 @@ class PushDriver extends Auth
         if ($postData) {
             $postData = json_decode($postData, true);
             if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.PushTask.pushTasks', ['push_driver_id' => $postData['row']['id']]));
+                $response->redirect(beAdminUrl('Monkey.PushDriver.pushDriverLogs', ['push_driver_id' => $postData['row']['id']]));
             }
         }
     }
 
     /**
-     * 创建发布任务
+     * 发布器 - 日志
      *
-     * @BePermission("*")
+     * @BePermission("发布器 - 日志", ordering="3.34")
      */
-    public function createPushTask()
+    public function pushDriverLogs()
     {
         $request = Be::getRequest();
         $response = Be::getResponse();
 
-        $postData = $request->post('data', '', '');
-        if ($postData) {
-            $postData = json_decode($postData, true);
-            if (isset($postData['row']['id']) && $postData['row']['id']) {
-                $response->redirect(beAdminUrl('Monkey.PushTask.create', ['push_driver_id' => $postData['row']['id']]));
-            }
-        }
+        $pushDriverId = $request->get('push_driver_id', '');
+
+        Be::getAdminPlugin('Curd')->setting([
+
+            'label' => '发布器日志',
+            'table' => 'monkey_push_driver_log',
+
+            'grid' => [
+                'title' => '发布器日志',
+
+                'filter' => [
+                    ['push_driver_id', '=', $pushDriverId],
+                ],
+
+                'orderBy' => 'create_time',
+                'orderByDir' => 'DESC',
+
+                'tableToolbar' => [
+                    'items' => [
+                        [
+                            'label' => '批量删除',
+                            'task' => 'delete',
+                            'target' => 'ajax',
+                            'confirm' => '确认要删除吗？',
+                            'ui' => [
+                                'icon' => 'el-icon-delete',
+                                'type' => 'danger'
+                            ]
+                        ],
+                    ]
+                ],
+
+
+                'table' => [
+
+                    // 未指定时取表的所有字段
+                    'items' => [
+                        [
+                            'driver' => TableItemSelection::class,
+                            'width' => '50',
+                        ],
+                        [
+                            'name' => 'content_title',
+                            'label' => '文章标题',
+                            'align' => 'left',
+                            'value' => function($row) {
+                                $sql = 'SELECT title FROM monkey_content WHERE id=?';
+                                $contentTitle = Be::getDb()->getValue($sql, [$row['content_id']]);
+                                if ($contentTitle) {
+                                    return $contentTitle;
+                                }
+                                return '';
+                            },
+                        ],
+                        [
+                            'name' => 'success',
+                            'label' => '是否成功',
+                            'width' => '90',
+                            'driver' => TableItemToggleTag::class,
+                        ],
+                        [
+                            'name' => 'create_time',
+                            'label' => '时间',
+                            'width' => '180',
+                            'sortable' => true,
+                        ],
+                    ],
+                    'operation' => [
+                        'label' => '操作',
+                        'width' => '120',
+                        'items' => [
+                            [
+                                'label' => '',
+                                'tooltip' => '查看',
+                                'task' => 'detail',
+                                'drawer' => [
+                                    'title' => '日志详情',
+                                    'width' => '80%'
+                                ],
+                                'ui' => [
+                                    'type' => 'primary',
+                                    ':underline' => 'false',
+                                    'style' => 'font-size: 20px;',
+                                ],
+                                'icon' => 'el-icon-search',
+                            ],
+                            [
+                                'label' => '',
+                                'tooltip' => '删除',
+                                'task' => 'delete',
+                                'confirm' => '确认要删除么？',
+                                'target' => 'ajax',
+                                'ui' => [
+                                    'type' => 'danger',
+                                    ':underline' => 'false',
+                                    'style' => 'font-size: 20px;',
+                                ],
+                                'icon' => 'el-icon-delete',
+                            ],
+                        ]
+                    ],
+                ],
+            ],
+
+            'detail' => [
+                'title' => '发布器日志详情',
+                'theme' => 'Blank',
+                'form' => [
+                    'items' => [
+                        [
+                            'name' => 'id',
+                            'label' => 'ID',
+                        ],
+                        [
+                            'name' => 'content_title',
+                            'label' => '文章标题',
+                            'value' => function($row) {
+                                $sql = 'SELECT title FROM monkey_content WHERE id=?';
+                                $contentTitle = Be::getDb()->getValue($sql, [$row['content_id']]);
+                                if ($contentTitle) {
+                                    return $contentTitle;
+                                }
+                                return '';
+                            },
+                        ],
+                        [
+                            'name' => 'request',
+                            'label' => '请求数据',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'json',
+                            'value' => function($row) {
+                                return json_encode(unserialize($row['request']), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                            }
+                        ],
+                        [
+                            'name' => 'response',
+                            'label' => '响应数据',
+                            'driver' => DetailItemCode::class,
+                            'language' => 'auto',
+                            'value' => function($row) {
+                                return $row['response'];
+                            }
+                        ],
+                        [
+                            'name' => 'success',
+                            'label' => '是否成功',
+                            'driver' => DetailItemToggleIcon::class,
+                        ],
+                        [
+                            'name' => 'message',
+                            'label' => '消息',
+                        ],
+                        [
+                            'name' => 'create_time',
+                            'label' => '创建时间',
+                        ],
+                    ]
+                ],
+            ],
+
+        ])->execute();
     }
+
 
 }

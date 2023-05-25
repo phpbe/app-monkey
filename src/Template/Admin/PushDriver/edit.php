@@ -26,7 +26,7 @@
         }
 
 
-        .field-item-header {
+        .be-page-content .field-item-header {
             color: #666;
             background-color: #EBEEF5;
             height: 3rem;
@@ -34,7 +34,7 @@
             margin-bottom: .5rem;
         }
 
-        .field-item {
+        .be-page-content  .field-item {
             background-color: #fff;
             border-bottom: #EBEEF5 1px solid;
             padding-top: .5rem;
@@ -42,36 +42,11 @@
             margin-bottom: 2px;
         }
 
-        .field-item-drag-icon {
+        .be-page-content  .field-item-op {
             width: 40px;
+            line-height: 2.5rem;
             text-align: center;
         }
-
-        .field-item-drag-icon i {
-            color: #ccc;
-            font-size: 20px;
-            cursor: move;
-        }
-
-        .field-item-drag-icon i:hover {
-            color: #409EFF;
-        }
-
-        .field-item-name {
-            width: 120px;
-            overflow: hidden;
-        }
-
-        .field-item-label{
-            width: 120px;
-            overflow: hidden;
-        }
-
-        .field-item-op {
-            width: 40px;
-            text-align: center;
-        }
-
     </style>
 </be-head>
 
@@ -89,12 +64,8 @@
             <div class="be-col-auto">
                 <div style="padding: .75rem 2rem 0 0;">
                     <el-button size="medium" :disabled="loading" @click="vueCenter.cancel();">取消</el-button>
-                    <el-dropdown type="primary" size="medium" split-button :disabled="loading" @click="vueCenter.save('')" @command="save">
-                        保存
-                        <el-dropdown-menu slot="dropdown">
-                            <el-dropdown-item command="stay">保存并继续编辑</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </el-dropdown>
+                    <el-button type="success" size="medium" :disabled="loading" @click="vueCenter.save('stay');">仅保存</el-button>
+                    <el-button type="primary" size="medium" :disabled="loading" @click="vueCenter.save('');">保存并返回</el-button>
                 </div>
             </div>
         </div>
@@ -104,11 +75,6 @@
             el: '#be-north',
             data: {
                 loading: false,
-            },
-            methods: {
-                save: function (command) {
-                    vueCenter.save(command)
-                }
             }
         });
     </script>
@@ -126,12 +92,14 @@
         <el-form ref="formRef" :model="formData" size="medium" class="be-mb-400">
             <?php
             $formData['id'] = ($this->pushDriver ? $this->pushDriver->id : '');
+            $formData['pull_driver_id'] = $this->pullDriver->id;
             ?>
 
             <div class="be-row">
-                <div class="be-col-24 be-lg-col">
+                <div class="be-col-24 be-xl-col">
 
                     <div class="be-p-150 be-bc-fff">
+
                         <div class="be-row">
                             <div class="be-col-auto be-lh-250"><span class="be-c-red">*</span> 名称：</div>
                             <div class="be-col">
@@ -148,11 +116,10 @@
                             </div>
                         </div>
 
-
                         <div class="be-row be-mt-100">
-                            <div class="be-col-auto be-lh-250">发布网址：</div>
+                            <div class="be-col-auto be-lh-250"><span class="be-c-red">*</span> 发布网址：</div>
                             <div class="be-col">
-                                <el-form-item prop="url">
+                                <el-form-item prop="url" :rules="[{required: true, message: '请输入发布网址', trigger: 'change' }]">
                                     <el-input
                                             type="text"
                                             placeholder="请输入发布网址"
@@ -165,105 +132,57 @@
                             </div>
                         </div>
 
+
                         <div class="be-mt-200 be-pb-50 be-bb-eee">请求头：</div>
-                        <div class="be-row be-mt-100">
-                            <div class="be-col-24 be-xxl-col-auto">
-                                <div class="be-row field-item-header">
-                                    <div class="be-col-auto">
-                                        <div class="field-item-drag-icon">
-                                        </div>
-                                    </div>
-                                    <div class="be-col-auto">
-                                        <div class="field-item-name">
-                                            名称
-                                        </div>
-                                    </div>
-                                    <div class="be-col-auto">
-                                        <div class="field-item-op">
-                                            操作
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <draggable
-                                        v-model="formData.headers"
-                                        ghost-class="field-item-ghost"
-                                        chosen-class="field-item-chosen"
-                                        drag-class="field-item-drag"
-                                        handle=".field-item-drag-icon"
-                                        force-fallback="true"
-                                        animation="100">
-                                    <transition-group>
-                                        <div class="be-row field-item" v-for="header, headerIndex in formData.headers" :key="header.name">
-                                            <div class="be-col-auto">
-                                                <div class="field-item-drag-icon">
-                                                    <i class="el-icon-rank"></i>
-                                                </div>
-                                            </div>
-                                            <div class="be-col-auto">
-                                                <div class="field-item-name">
-                                                    <el-link type="primary" @click="editHeader(header)">{{header.name}}</el-link>
-                                                </div>
-                                            </div>
-                                            <div class="be-col-auto">
-                                                <div class="field-item-op">
-                                                    <el-link type="danger" icon="el-icon-delete" @click="deleteHeader(header)"></el-link>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </transition-group>
-                                </draggable>
-
-                                <el-button class="be-mt-100" size="small" type="primary" @click="addHeader">新增请求头</el-button>
+                        <div class="be-row be-mt-100 field-item-header">
+                            <div class="be-col">
+                                <div class="be-pl-100">名称</div>
                             </div>
-
-                            <div class="be-col-24 be-xxl-col-auto">
-                                <div class="be-pl-200 be-pt-200"></div>
+                            <div class="be-col-auto">
+                                <div class="be-pl-100"></div>
                             </div>
-
-                            <div class="be-col-24 be-xxl-col">
-                                <div v-show="headerForm">
-
-                                    <div class="be-row">
-                                        <div class="be-col-auto be-lh-250">名称：</div>
-                                        <div class="be-col">
-                                            <el-input
-                                                    type="text"
-                                                    placeholder="请输入名称"
-                                                    v-model = "formData.header_name"
-                                                    size="medium"
-                                                    maxlength="60"
-                                                    show-word-limit>
-                                            </el-input>
-                                            <?php
-                                            $formData['header_name'] = '';
-                                            ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="be-row be-mt-100">
-                                        <div class="be-col-auto be-lh-250">值：</div>
-                                        <div class="be-col">
-                                            <el-input
-                                                    type="text"
-                                                    placeholder="请输入值"
-                                                    v-model = "formData.header_value"
-                                                    size="medium">
-                                            </el-input>
-                                            <?php
-                                            $formData['header_value'] = '';
-                                            ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="be-mt-150 be-ta-right">
-                                        <el-button size="small" type="primary" :disabled="formData.header_name==='' || formData.header_value===''" @click="saveHeader">确定</el-button>
-                                        <el-button size="small" type="danger" @click="headerForm = false;">取消</el-button>
-                                    </div>
+                            <div class="be-col">
+                                值
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="field-item-op">
+                                    操作
                                 </div>
-
                             </div>
                         </div>
+
+                        <div class="be-row field-item" v-for="header, headerIndex in formData.headers" :key="headerIndex">
+                            <div class="be-col">
+                                <el-input
+                                        type="text"
+                                        placeholder="请输入名称"
+                                        v-model = "header.name"
+                                        size="medium"
+                                        maxlength="300"
+                                        show-word-limit>
+                                </el-input>
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="be-pl-100"></div>
+                            </div>
+                            <div class="be-col">
+                                <el-input
+                                        type="text"
+                                        placeholder="请输入值"
+                                        v-model = "header.value"
+                                        size="medium"
+                                        maxlength="600"
+                                        show-word-limit>
+                                </el-input>
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="field-item-op">
+                                    <el-link type="danger" icon="el-icon-delete" @click="deleteHeader(header)"></el-link>
+                                </div>
+                            </div>
+                        </div>
+
+                        <el-button class="be-mt-100" size="small" type="primary" @click="addHeader">新增请求头</el-button>
                         <?php
                         if ($this->pushDriver) {
                             $formData['headers'] = $this->pushDriver->headers;
@@ -272,143 +191,91 @@
                         }
                         ?>
 
-
-                        <div class="be-mt-200 be-pb-50 be-bb-eee"><span class="be-c-red">*</span> 发布字段：</div>
-                        <div class="be-row be-mt-100">
-                            <div class="be-col-24 be-xxl-col-auto">
-                                <div class="be-row field-item-header">
-                                    <div class="be-col-auto">
-                                        <div class="field-item-drag-icon">
-                                        </div>
-                                    </div>
-                                    <div class="be-col-auto">
-                                        <div class="field-item-name">
-                                            名称
-                                        </div>
-                                    </div>
-                                    <div class="be-col-auto">
-                                        <div class="field-item-label">
-                                            标签
-                                        </div>
-                                    </div>
-                                    <div class="be-col-auto">
-                                        <div class="field-item-op">
-                                            操作
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <draggable
-                                        v-model="formData.fields"
-                                        ghost-class="field-item-ghost"
-                                        chosen-class="field-item-chosen"
-                                        drag-class="field-item-drag"
-                                        handle=".field-item-drag-icon"
-                                        force-fallback="true"
-                                        animation="100">
-                                    <transition-group>
-                                        <div class="be-row field-item" v-for="field, fieldIndex in formData.fields" :key="field.name">
-                                            <div class="be-col-auto">
-                                                <div class="field-item-drag-icon">
-                                                    <i class="el-icon-rank"></i>
-                                                </div>
-                                            </div>
-                                            <div class="be-col-auto">
-                                                <div class="field-item-name">
-                                                    <el-link type="primary" @click="editField(field)">{{field.name}}</el-link>
-                                                </div>
-                                            </div>
-                                            <div class="be-col-auto">
-                                                <div class="field-item-label">
-                                                    {{field.label}}
-                                                </div>
-                                            </div>
-                                            <div class="be-col-auto">
-                                                <div class="field-item-op">
-                                                    <el-link type="danger" icon="el-icon-delete" @click="deleteField(field)"></el-link>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </transition-group>
-                                </draggable>
-
-                                <el-button class="be-mt-100" size="small" type="primary" @click="addField">新增字段</el-button>
+                        <div class="be-row be-mt-200">
+                            <div class="be-col-auto">
+                                <span class="be-c-red">*</span> 请求格式：
                             </div>
-
-                            <div class="be-col-24 be-xxl-col-auto">
-                                <div class="be-pl-200 be-pt-200"></div>
-                            </div>
-
-                            <div class="be-col-24 be-xxl-col">
-                                <div v-show="fieldForm">
-
-                                    <div class="be-row">
-                                        <div class="be-col-auto be-lh-250">名称：</div>
-                                        <div class="be-col">
-                                            <el-input
-                                                    type="text"
-                                                    placeholder="请输入名称"
-                                                    v-model = "formData.field_name"
-                                                    size="medium"
-                                                    maxlength="60"
-                                                    show-word-limit>
-                                            </el-input>
-                                            <?php
-                                            $formData['field_name'] = '';
-                                            ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="be-row be-mt-100">
-                                        <div class="be-col-auto be-lh-250">标签：</div>
-                                        <div class="be-col">
-                                            <el-input
-                                                    type="text"
-                                                    placeholder="请输入标签"
-                                                    v-model = "formData.field_label"
-                                                    size="medium"
-                                                    maxlength="60"
-                                                    show-word-limit>
-                                            </el-input>
-                                            <?php
-                                            $formData['field_label'] = '';
-                                            ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="be-row be-mt-100">
-                                        <div class="be-col-auto be-lh-250">默认值：</div>
-                                        <div class="be-col">
-                                            <el-input
-                                                    type="text"
-                                                    placeholder="请输入默认值"
-                                                    v-model = "formData.field_default"
-                                                    size="medium">
-                                            </el-input>
-                                            <?php
-                                            $formData['field_default'] = '';
-                                            ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="be-row be-mt-100">
-                                        <div class="be-col-auto be-lh-250">是否必填：</div>
-                                        <div class="be-col be-lh-250">
-                                            <el-switch v-model.number="formData.field_required" :active-value="1" :inactive-value="0" size="medium"></el-switch>
-                                            <?php
-                                            $formData['field_required'] = 0;
-                                            ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="be-mt-150 be-ta-right">
-                                        <el-button size="small" type="primary" :disabled="formData.field_name==='' || formData.field_label===''" @click="saveField">确定</el-button>
-                                        <el-button size="small" type="danger" @click="fieldForm = false;">取消</el-button>
-                                    </div>
-                                </div>
-
+                            <div class="be-col">
+                                <el-radio v-model="formData.format" label="form">FORM 表单</el-radio>
+                                <el-radio v-model="formData.format" label="json">JSON 数据</el-radio>
                             </div>
                         </div>
+                        <?php $formData['format'] = $this->pushDriver ? $this->pushDriver->format : 'form'; ?>
+
+
+                        <div class="be-mt-200 be-pb-50 be-bb-ddd"><span class="be-c-red">*</span> 发布字段：</div>
+                        <div class="be-row field-item-header">
+                            <div class="be-col">
+                                <div class="be-pl-100">字段名</div>
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="be-pl-100"></div>
+                            </div>
+                            <div class="be-col be-ta-center">
+                                取值类型
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="be-pl-100"></div>
+                            </div>
+                            <div class="be-col">
+                                采集的内容或自定义
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="field-item-op">
+                                    操作
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="be-row field-item" v-for="field, fieldIndex in formData.fields" :key="fieldIndex">
+                            <div class="be-col">
+                                <el-input
+                                        type="text"
+                                        placeholder="请输入字段名"
+                                        v-model = "field.name"
+                                        size="medium"
+                                        maxlength="300"
+                                        show-word-limit>
+                                </el-input>
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="be-pl-100"></div>
+                            </div>
+                            <div class="be-col be-ta-center be-lh-250">
+                                <el-radio v-model="field.value" label="use">取用</el-radio>
+                                <el-radio v-model="field.value" label="custom">自定义</el-radio>
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="be-pl-100"></div>
+                            </div>
+                            <div class="be-col">
+                                <div v-show="field.value === 'use'">
+                                    <el-select  v-model="field.value_use" size="medium" placeholder="请选择" filterable>
+                                        <el-option
+                                                v-for="pullDriverField in pullDriver.fields"
+                                                :key="pullDriverField.name"
+                                                :label="pullDriverField.name"
+                                                :value="pullDriverField.name">
+                                        </el-option>
+                                    </el-select>
+                                </div>
+                                <div v-show="field.value === 'custom'">
+                                    <el-input
+                                            type="text"
+                                            placeholder="请输入自定义值"
+                                            v-model = "field.value_custom"
+                                            size="medium">
+                                    </el-input>
+                                </div>
+                            </div>
+                            <div class="be-col-auto">
+                                <div class="field-item-op">
+                                    <el-link type="danger" icon="el-icon-delete" @click="deleteField(field)"></el-link>
+                                </div>
+                            </div>
+                        </div>
+
+                        <el-button class="be-mt-100" size="small" type="primary" @click="addField">新增字段</el-button>
                         <?php
                         if ($this->pushDriver) {
                             $formData['fields'] = $this->pushDriver->fields;
@@ -418,6 +285,7 @@
                         ?>
                     </div>
                 </div>
+
                 <div class="be-col-24 be-xl-col-auto">
                     <div class="be-mt-150 be-pl-150"></div>
                 </div>
@@ -438,9 +306,7 @@
                                 <td>间隔时间（毫秒）：</td>
                                 <td>
                                     <el-form-item prop="interval">
-                                        <el-form-item prop="ordering">
-                                            <el-input-number v-model="formData.interval"></el-input-number>
-                                        </el-form-item>
+                                        <el-input-number v-model="formData.interval"></el-input-number>
                                     </el-form-item>
                                     <?php $formData['interval'] = ($this->pushDriver ? $this->pushDriver->interval : 1000); ?>
                                 </td>
@@ -454,22 +320,6 @@
                                     <?php $formData['ordering'] = ($this->pushDriver ? $this->pushDriver->ordering : 0); ?>
                                 </td>
                             </tr>
-                            <tr>
-                                <td><span class="be-c-red">*</span> 版本号：</td>
-                                <td>
-                                    <el-form-item prop="version">
-                                        <el-form-item prop="version">
-                                            <el-input v-model="formData.version">
-                                                <template slot="prepend">v</template>
-                                            </el-input>
-                                        </el-form-item>
-                                    </el-form-item>
-                                    <?php
-                                    $formData['version'] = ($this->pushDriver ? $this->pushDriver->version : '1.0.0');
-                                    ?>
-                                </td>
-                            </tr>
-
                         </table>
 
                     </div>
@@ -491,11 +341,7 @@
                 formData: <?php echo json_encode($formData); ?>,
                 loading: false,
 
-                headerForm: false,
-                fieldForm: false,
-
-                header: false,
-                field: false,
+                pullDriver: <?php echo json_encode($this->pullDriver); ?>,
 
                 t: false
                 <?php
@@ -503,100 +349,37 @@
                 ?>
             },
             methods: {
-                addHeader() {
-                    this.header = false;
-                    this.formData.header_name = "";
-                    this.formData.header_value = "";
 
-                    this.headerForm = true;
-                },
-                editHeader(header) {
-                    this.header = header;
-                    this.formData.header_name = header.name;
-                    this.formData.header_value = header.value;
-
-                    this.headerForm = true;
-                },
-                saveHeader() {
-                    if (this.header) {
-                        this.header.name = this.formData.header_name;
-                        this.header.value = this.formData.header_value;
-                    } else {
-                        this.formData.headers.push({
-                            name: this.formData.header_name,
-                            value: this.formData.header_value,
-                        });
-                    }
-
-                    console.log(this.header);
-                    console.log(this.formData);
-
-                    this.header = false;
-                    this.headerForm = false;
+                addHeader: function () {
+                    this.formData.headers.push({
+                        name: "",
+                        value: "",
+                    });
                 },
                 deleteHeader(header) {
-                    let _this = this;
-                    this.$confirm("确认要删除请求头（" + header.name + "）么？", "操作确认？", {
-                        confirmButtonText: "确定",
-                        cancelButtonText: "取消",
-                        type: "warning"
-                    }).then(function(){
-                        _this.formData.headers.splice(_this.formData.headers.indexOf(header), 1);
-                    }).catch(function(){});
+                    this.formData.headers.splice(this.formData.headers.indexOf(header), 1);
                 },
-                addField() {
-                    this.field = false;
-                    this.formData.field_name = "";
-                    this.formData.field_label = "";
-                    this.formData.field_default = "";
-                    this.formData.field_required = 0;
 
-                    this.fieldForm = true;
+                addField: function () {
+                    this.formData.fields.push({
+                        name: "",
+                        value: "use",
+                        value_use: "",
+                        value_custom: "",
+                    });
+                    this.$forceUpdate();
                 },
-                editField(field) {
-                    this.field = field;
-                    this.formData.field_name = field.name;
-                    this.formData.field_label = field.label;
-                    this.formData.field_default = field.default;
-                    this.formData.field_required = field.required;
+                deleteField: function (field) {
+                    this.formData.fields.splice(this.formData.fields.indexOf(field), 1);
+                },
 
-                    this.fieldForm = true;
-                },
-                saveField() {
-                    if (this.field) {
-                        this.field.name = this.formData.field_name;
-                        this.field.label = this.formData.field_label;
-                        this.field.default = this.formData.field_default;
-                        this.field.required = this.formData.field_required;
-                    } else {
-                        this.formData.fields.push({
-                            name: this.formData.field_name,
-                            label: this.formData.field_label,
-                            default: this.formData.field_default,
-                            required: this.formData.field_required,
-                        });
-                    }
-
-                    this.field = false;
-                    this.fieldForm = false;
-                },
-                deleteField(field) {
-                    let _this = this;
-                    this.$confirm("确认要删除发布字段（" + field.name + "）么？", "操作确认？", {
-                        confirmButtonText: "确定",
-                        cancelButtonText: "取消",
-                        type: "warning"
-                    }).then(function(){
-                        _this.formData.fields.splice(_this.formData.fields.indexOf(field), 1);
-                    }).catch(function(){});
-                },
                 save: function (command) {
                     let _this = this;
                     this.$refs["formRef"].validate(function (valid) {
                         if (valid) {
                             _this.loading = true;
                             vueNorth.loading = true;
-                            _this.$http.post("<?php echo beAdminUrl('Monkey.PushDriver.' . ($this->pushDriver ? 'edit' : 'create')); ?>", {
+                            _this.$http.post("<?php echo beAdminUrl('Monkey.PushDriver.' . ($this->pushDriver ? 'edit' : 'create'), ['push_driver_id' => $this->pushDriver->id]); ?>", {
                                 formData: _this.formData
                             }).then(function (response) {
                                 _this.loading = false;

@@ -116,6 +116,21 @@ class PushDriver
             $pushDriverId = $data['id'];
         }
 
+        if (!isset($data['pull_driver_id']) || !is_string($data['pull_driver_id']) || $data['pull_driver_id'] === '') {
+            throw new ServiceException('参数（pull_driver_id）缺失！');
+        }
+
+        $tuplePullDriver = Be::getTuple('monkey_pull_driver');
+        try {
+            $tuplePullDriver->load($data['pull_driver_id']);
+        } catch (\Throwable $t) {
+            throw new ServiceException('采集器（# ' . $data['pull_driver_id'] . '）不存在！');
+        }
+
+        if ($tuplePullDriver->is_delete === 1) {
+            throw new ServiceException('采集器（# ' . $data['pull_driver_id'] . '）不存在！');
+        }
+
         $tuplePushDriver = Be::getTuple('monkey_push_driver');
         if (!$isNew) {
             try {
@@ -127,6 +142,10 @@ class PushDriver
             if ($tuplePushDriver->is_delete === 1) {
                 throw new ServiceException('发布器（# ' . $pushDriverId . '）不存在！');
             }
+
+            if ($tuplePushDriver->pull_driver_id !== $data['pull_driver_id']) {
+                throw new ServiceException('参数（pull_driver_id）错误！');
+            }
         }
 
         if (!isset($data['name']) || !is_string($data['name'])) {
@@ -137,6 +156,7 @@ class PushDriver
             $data['url'] = '';
         }
 
+        // ------------------------------------------------------------------------------------------------------------- 检查请求头
         $headers = [];
         if (isset($data['headers']) && is_array($data['headers'])) {
             $i = 0;
@@ -167,10 +187,19 @@ class PushDriver
                     'value' => $header['value'],
                 ];
             }
-
-            $data['headers'] = $headers;
         }
 
+        $data['headers'] = $headers;
+        // ============================================================================================================= 检查请求头
+
+
+
+        if (!isset($data['format']) || !is_string($data['format']) || !in_array($data['format'], ['form', 'json'])) {
+            throw new ServiceException('请求格式（format）参数无效！');
+        }
+
+
+        // ------------------------------------------------------------------------------------------------------------- 检查请求字段
         if (!isset($data['fields']) || !is_array($data['fields'])) {
             throw new ServiceException('发布字段缺失！');
         }
@@ -179,6 +208,7 @@ class PushDriver
         $i = 0;
         foreach ($data['fields'] as $field) {
             $i++;
+
             if (!isset($field['name']) || !is_string($field['name'])) {
                 throw new ServiceException('第' . $i . '个发布字段名称缺失！');
             }
@@ -189,36 +219,44 @@ class PushDriver
                 throw new ServiceException('第' . $i . '个发布字段名称未填写！');
             }
 
-            if (!isset($field['label']) || !is_string($field['label'])) {
-                throw new ServiceException('第' . $i . '个发布字段脚本缺失！');
+            if (!isset($field['value']) || !is_string($field['value'])) {
+                throw new ServiceException('第' . $i . '个发布字段类型缺失！');
             }
 
-            $field['label'] = trim($field['label']);
-
-            if ($field['label'] === '') {
-                throw new ServiceException('第' . $i . '个发布字段脚本未填写！');
+            if (!in_array($field['value'], ['use', 'custom'])) {
+                throw new ServiceException('第' . $i . '个发布字段类型无法识别！');
             }
 
-            if (!isset($field['default']) || !is_string($field['default'])) {
-                $field['default'] = '';
-            }
+            switch ($field['value']) {
+                case 'use':
+                    if (!isset($field['value_use']) || !is_string($field['value_use'])) {
+                        throw new ServiceException('第' . $i . '个发布字段值未选择！');
+                    }
 
-            if (!isset($field['required']) || !is_numeric($field['required'])) {
-                $field['required'] = 0;
-            }
-            $field['required'] = (int)$field['required'];
-            if (!in_array($field['required'], [0, 1])) {
-                $field['required'] = 0;
+                    $field['value_custom'] = '';
+                    break;
+                case 'custom':
+                    if (!isset($field['value_custom']) || !is_string($field['value_custom'])) {
+                        throw new ServiceException('第' . $i . '个发布字段自定义值未填写！');
+                    }
+
+                    $field['value_use'] = '';
+                    break;
             }
 
             $fields[] = [
                 'name' => $field['name'],
-                'label' => $field['label'],
-                'default' => $field['default'],
-                'required' => $field['required'],
+                'value' => $field['value'],
+                'value_use' => $field['value_use'],
+                'value_custom' => $field['value_custom'],
             ];
         }
+
         $data['fields'] = $fields;
+        // =============================================================================================================  检查请求字段
+
+
+
 
         if (!isset($data['interval']) || !is_numeric($data['interval'])) {
             $data['interval'] = 1000;
@@ -228,10 +266,6 @@ class PushDriver
 
         if ($data['interval'] <= 0) {
             $data['interval'] = 1000;
-        }
-
-        if (!isset($data['version']) || !is_string($data['version'])) {
-            $data['version'] = '';
         }
 
         if (!isset($data['ordering']) || !is_numeric($data['ordering'])) {
@@ -250,9 +284,9 @@ class PushDriver
             $tuplePushDriver->name = $data['name'];
             $tuplePushDriver->url = $data['url'];
             $tuplePushDriver->headers = serialize($data['headers']);
+            $tuplePushDriver->format = $data['format'];
             $tuplePushDriver->fields = serialize($data['fields']);
             $tuplePushDriver->interval = $data['interval'];
-            $tuplePushDriver->version = $data['version'];
             $tuplePushDriver->ordering = $data['ordering'];
             $tuplePushDriver->is_enable = $data['is_enable'];
             $tuplePushDriver->update_time = $now;
@@ -276,5 +310,47 @@ class PushDriver
         return $tuplePushDriver->toObject();
     }
 
+
+    /**
+     * 启动
+     *
+     * @return void
+     */
+    public function run(string $pushDriverId)
+    {
+        $tuplePushDriver = Be::getTuple('monkey_push_driver');
+
+        try {
+            $tuplePushDriver->load($pushDriverId);
+        } catch (\Throwable $t) {
+            throw new ServiceException('发布器（# ' . $pushDriverId . '）不存在！');
+        }
+
+        if ($tuplePushDriver->is_delete === 1) {
+            throw new ServiceException('发布器（# ' . $pushDriverId . '）不存在！');
+        }
+
+        $db = Be::getDb();
+        $db->startTransaction();
+        try {
+            $sql = 'DELETE FROM monkey_push_driver_log WHERE push_task_id=?';
+            $db->query($sql, [$pushDriverId]);
+
+            $tuplePushDriver->status = 'pending';
+            $tuplePushDriver->update_time = date('Y-m-d H:i:s');
+            $tuplePushDriver->update();
+
+            $db->commit();
+
+            Be::getService('App.System.Driver')->trigger('Monkey.PushDriver');
+
+        } catch (\Throwable $t) {
+            $db->rollback();
+            Be::getLog()->error($t);
+
+            throw new ServiceException( '发布器启动失败！');
+        }
+
+    }
 
 }

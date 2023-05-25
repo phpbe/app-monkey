@@ -397,6 +397,8 @@ BeMonkey = {
                 fields: postDataFields
             };
 
+            console.log("采集数据回传：", postData);
+
             let _this = this;
 
             // 上传文件到账单系统
@@ -411,7 +413,7 @@ BeMonkey = {
                 onload: function (response) {
 
                     if (response.status !== 200) {
-                        console.log(response);
+                        console.log("采集数据回传失败（状态码非200）：", response);
 
                         _this.status("提交数据失败，60秒后再次尝试！");
 
@@ -423,7 +425,7 @@ BeMonkey = {
                     }
 
                     if (!response.response) {
-                        console.log(response);
+                        console.log("采集数据回传失败（无效响应）：", response);
 
                         _this.status("提交数据失败（无有效返回），60秒后再次尝试！");
 
@@ -435,7 +437,7 @@ BeMonkey = {
                     }
 
                     if (!response.response.success) {
-                        console.log(response);
+                        console.log("采集数据回传失败（响应失败）：", response);
 
                         let message = "";
                         if (response.response.message) {
