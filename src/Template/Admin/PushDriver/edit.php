@@ -101,6 +101,13 @@
                     <div class="be-p-150 be-bc-fff">
 
                         <div class="be-row">
+                            <div class="be-col-auto be-lh-250">采集器：</div>
+                            <div class="be-col be-lh-250">
+                                <?php echo $this->pullDriver->name; ?>
+                            </div>
+                        </div>
+
+                        <div class="be-row be-mt-100">
                             <div class="be-col-auto be-lh-250"><span class="be-c-red">*</span> 名称：</div>
                             <div class="be-col">
                                 <el-form-item prop="name" :rules="[{required: true, message: '请输入名称', trigger: 'change' }]">
