@@ -67,7 +67,7 @@ CREATE TABLE `monkey_push_driver_log` (
 `id` varchar(36) NOT NULL DEFAULT 'uuid()' COMMENT 'UUID',
 `push_driver_id` varchar(36) NOT NULL DEFAULT '' COMMENT '发布任务ID',
 `content_id` varchar(36) NOT NULL DEFAULT '' COMMENT '内容ID',
-`request` text NOT NULL COMMENT '请求数据',
+`request` mediumtext NOT NULL COMMENT '请求数据',
 `response` text NOT NULL COMMENT '响应数据',
 `success` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否成功',
 `message` varchar(500) NOT NULL COMMENT '信息',
