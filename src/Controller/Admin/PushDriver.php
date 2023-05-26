@@ -374,9 +374,10 @@ class PushDriver extends Auth
 
         if ($request->isAjax()) {
             try {
-                Be::getService('App.Monkey.Admin.PushDriver')->edit($request->json('formData'));
+                $pushDriver = Be::getService('App.Monkey.Admin.PushDriver')->edit($request->json('formData'));
                 $response->set('success', true);
                 $response->set('message', '新建发布器成功！');
+                $response->set('pushDriver', $pushDriver);
                 $response->json();
             } catch (\Throwable $t) {
                 $response->set('success', false);
@@ -420,9 +421,10 @@ class PushDriver extends Auth
 
         if ($request->isAjax()) {
             try {
-                Be::getService('App.Monkey.Admin.PushDriver')->edit($request->json('formData'));
+                $pushDriver = Be::getService('App.Monkey.Admin.PushDriver')->edit($request->json('formData'));
                 $response->set('success', true);
                 $response->set('message', '编辑发布器成功！');
+                $response->set('pushDriver', $pushDriver);
                 $response->json();
             } catch (\Throwable $t) {
                 $response->set('success', false);

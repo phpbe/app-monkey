@@ -281,6 +281,7 @@ class PushDriver
         $db->startTransaction();
         try {
             $now = date('Y-m-d H:i:s');
+            $tuplePushDriver->pull_driver_id = $data['pull_driver_id'];
             $tuplePushDriver->name = $data['name'];
             $tuplePushDriver->url = $data['url'];
             $tuplePushDriver->headers = serialize($data['headers']);
@@ -333,7 +334,7 @@ class PushDriver
         $db = Be::getDb();
         $db->startTransaction();
         try {
-            $sql = 'DELETE FROM monkey_push_driver_log WHERE push_task_id=?';
+            $sql = 'DELETE FROM monkey_push_driver_log WHERE push_driver_id=?';
             $db->query($sql, [$pushDriverId]);
 
             $tuplePushDriver->status = 'pending';

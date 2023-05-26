@@ -359,9 +359,10 @@ class PullDriver extends Auth
 
         if ($request->isAjax()) {
             try {
-                Be::getService('App.Monkey.Admin.PullDriver')->edit($request->json('formData'));
+                $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->edit($request->json('formData'));
                 $response->set('success', true);
                 $response->set('message', '新建采集器成功！');
+                $response->set('pullDriver', $pullDriver);
                 $response->json();
             } catch (\Throwable $t) {
                 $response->set('success', false);
@@ -390,9 +391,10 @@ class PullDriver extends Auth
 
         if ($request->isAjax()) {
             try {
-                Be::getService('App.Monkey.Admin.PullDriver')->edit($request->json('formData'));
+                $pullDriver = Be::getService('App.Monkey.Admin.PullDriver')->edit($request->json('formData'));
                 $response->set('success', true);
                 $response->set('message', '编辑采集器成功！');
+                $response->set('pullDriver', $pullDriver);
                 $response->json();
             } catch (\Throwable $t) {
                 $response->set('success', false);

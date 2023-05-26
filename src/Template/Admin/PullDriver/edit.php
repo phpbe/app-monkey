@@ -608,7 +608,7 @@
                                     if (responseData.success) {
                                         _this.$message.success(responseData.message);
                                         if (command === 'stay') {
-                                            _this.formData.id = responseData.ruld.id;
+                                            _this.formData.id = responseData.pullDriver.id;
                                         } else {
                                             setTimeout(function () {
                                                 window.onbeforeunload = null;
