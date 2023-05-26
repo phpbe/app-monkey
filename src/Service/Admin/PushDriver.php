@@ -343,7 +343,7 @@ class PushDriver
 
             $db->commit();
 
-            Be::getService('App.System.Driver')->trigger('Monkey.PushDriver');
+            Be::getService('App.System.Task')->trigger('Monkey.PushDriver');
 
         } catch (\Throwable $t) {
             $db->rollback();
